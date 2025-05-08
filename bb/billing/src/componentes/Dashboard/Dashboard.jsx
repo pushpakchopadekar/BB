@@ -5,7 +5,7 @@ import StartSale from '../SaleProcess/SaleProcess';
 import RegisteredProducts from '../RegisteredProduct/RegisteredProducts';
 import SalesHistory from '../SalesHistory/SalesHistory';
 
-const Dashboard = () => {
+const Dashboard = ({ onLogout }) => {
   const [darkMode, setDarkMode] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [activeMenu, setActiveMenu] = useState('Dashboard');
@@ -43,7 +43,6 @@ const Dashboard = () => {
     }
   };
 
-  // Debugging effect to track menu changes
   useEffect(() => {
     console.log('Active menu changed to:', activeMenu);
   }, [activeMenu]);
@@ -57,7 +56,7 @@ const Dashboard = () => {
   };
 
   const handleMenuClick = (menu) => {
-    console.log('Menu clicked:', menu); // Debug log
+    console.log('Menu clicked:', menu);
     setActiveMenu(menu);
   };
 
@@ -78,15 +77,16 @@ const Dashboard = () => {
     setEditingRates(false);
   };
 
+  const handleLogoutClick = () => {
+    onLogout();
+  };
+
   const renderActiveComponent = () => {
-    console.log('Rendering:', activeMenu); // Debug log
+    console.log('Rendering:', activeMenu);
     switch(activeMenu) {
       case 'Dashboard':
         return (
           <>
-           
-            
-            {/* Today's Rates Section */}
             <div className="rates-container">
               <div className="rates-header">
                 <h2 className="section-heading">Today's Rates</h2>
@@ -158,7 +158,6 @@ const Dashboard = () => {
               )}
             </div>
             
-            {/* Summary Cards */}
             <div className="summary-cards">
               <div className="card">
                 <div className="card-icon gold-bg">💰</div>
@@ -195,7 +194,6 @@ const Dashboard = () => {
               </div>
             </div>
             
-            {/* Charts and Tables */}
             <div className="row">
               <div className="col chart-container">
                 <h2 className="section-heading">Sales Overview</h2>
@@ -234,7 +232,6 @@ const Dashboard = () => {
               </div>
             </div>
             
-            {/* Recent Transactions */}
             <div className="recent-transactions">
               <h2 className="section-heading">Recent Transactions</h2>
               <table>
@@ -269,7 +266,6 @@ const Dashboard = () => {
               </table>
             </div>
             
-            {/* Customer Overview */}
             <div className="customer-overview">
               <h2 className="section-heading">Customer Overview</h2>
               <div className="customer-summary">
@@ -312,8 +308,8 @@ const Dashboard = () => {
 
   return (
     <div className={`dashboard-container ${darkMode ? 'dark-mode' : ''}`}>
-      {/* Sidebar */}
-      <div className={`sidebar ${sidebarOpen ? 'open' : 'closed'}`}>
+      {/* Fixed Sidebar */}
+      <div className={`sidebar ${sidebarOpen ? 'open' : 'closed'} fixed-sidebar`}>
         <div className="sidebar-header">
           <h2>Jewellery Billing</h2>
           <button className="sidebar-toggle" onClick={toggleSidebar}>
@@ -365,18 +361,18 @@ const Dashboard = () => {
         </div>
       </div>
       
-      {/* Main Content */}
-      <div className="main-content">
-        <header className="main-header">
+      {/* Main Content Area */}
+      <div className="main-content-wrapper">
+        {/* Fixed Header */}
+        <header className="main-header fixed-header">
           <h1 className="main-heading">{activeMenu}</h1>
           <div className="header-actions">
-            <div className="search-box">
-              <input type="text" placeholder="Search bills, customers..." />
-              <button>🔍</button>
-            </div>
             <div className="header-right">
               <button className="mode-toggle" onClick={toggleDarkMode}>
                 {darkMode ? '☀️ Light Mode' : '🌙 Dark Mode'}
+              </button>
+              <button className="logout-btn" onClick={handleLogoutClick}>
+                Logout
               </button>
               <div className="user-profile">
                 <span>Admin</span>
@@ -386,7 +382,8 @@ const Dashboard = () => {
           </div>
         </header>
         
-        <div className="dashboard-content">
+        {/* Scrollable Content Area */}
+        <div className="scrollable-content">
           {renderActiveComponent()}
         </div>
       </div>

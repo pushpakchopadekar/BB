@@ -2,76 +2,8 @@ import React, { useState, useEffect } from 'react';
 import './RegisteredProducts.css';
 
 const RegisteredProducts = () => {
-  // Sample product data
-  const [products, setProducts] = useState([
-    {
-      id: 1,
-      name: "Gold Chain 22K",
-      barcode: "JWL12345678",
-      category: "Chain",
-      metalType: "Gold",
-      purity: "22K",
-      weight: 8.5,
-      price: 42500,
-      stock: 12,
-      image: "https://via.placeholder.com/80",
-      lastUpdated: "2023-05-10"
-    },
-    {
-      id: 2,
-      name: "Diamond Ring 18K",
-      barcode: "JWL87654321",
-      category: "Ring",
-      metalType: "Gold",
-      purity: "18K",
-      weight: 3.2,
-      price: 28500,
-      stock: 5,
-      image: "https://via.placeholder.com/80",
-      lastUpdated: "2023-05-15"
-    },
-    {
-      id: 3,
-      name: "Silver Bracelet",
-      barcode: "JWL56781234",
-      category: "Bracelet",
-      metalType: "Silver",
-      purity: "92.5 Sterling Silver",
-      weight: 25,
-      price: 2250,
-      stock: 18,
-      image: "https://via.placeholder.com/80",
-      lastUpdated: "2023-05-12"
-    },
-    {
-      id: 4,
-      name: "Gold Mangalsutra",
-      barcode: "JWL34567812",
-      category: "Pendant",
-      metalType: "Gold",
-      purity: "22K",
-      weight: 5.8,
-      price: 32000,
-      stock: 3,
-      image: "https://via.placeholder.com/80",
-      lastUpdated: "2023-05-18"
-    },
-    {
-      id: 5,
-      name: "Platinum Earrings",
-      barcode: "JWL98765432",
-      category: "Earrings",
-      metalType: "Platinum",
-      purity: "95%",
-      weight: 4.2,
-      price: 38500,
-      stock: 7,
-      image: "https://via.placeholder.com/80",
-      lastUpdated: "2023-05-20"
-    }
-  ]);
-
-  const [filteredProducts, setFilteredProducts] = useState(products);
+  const [products, setProducts] = useState([]);
+  const [filteredProducts, setFilteredProducts] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('All');
   const [stockFilter, setStockFilter] = useState('All');
@@ -82,14 +14,36 @@ const RegisteredProducts = () => {
   const [editingProduct, setEditingProduct] = useState(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [productToDelete, setProductToDelete] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Get unique categories
-  const categories = ['All', ...new Set(products.map(p => p.category))];
+  // Fetch products from API or database
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        // Replace this with your actual API call
+        // const response = await fetch('your-api-endpoint');
+        // const data = await response.json();
+        // setProducts(data);
+        
+        // For now, we'll set products to empty array
+        setProducts([]);
+        setIsLoading(false);
+      } catch (error) {
+        console.error('Error fetching products:', error);
+        setIsLoading(false);
+      }
+    };
+
+    fetchProducts();
+  }, []);
+
+  // Get unique categories from products
+  const categories = ['All', ...new Set(products.map(p => p.category))].filter(Boolean);
 
   // Filter and sort products
   useEffect(() => {
     let result = [...products];
-    
+
     // Apply search filter
     if (searchTerm) {
       result = result.filter(p => 
@@ -97,19 +51,19 @@ const RegisteredProducts = () => {
         p.barcode.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
-    
+
     // Apply category filter
     if (categoryFilter !== 'All') {
       result = result.filter(p => p.category === categoryFilter);
     }
-    
+
     // Apply stock filter
     if (stockFilter === 'Low') {
       result = result.filter(p => p.stock < 5);
     } else if (stockFilter === 'Out') {
       result = result.filter(p => p.stock === 0);
     }
-    
+
     // Apply sorting
     switch(sortOption) {
       case 'name-asc':
@@ -133,7 +87,7 @@ const RegisteredProducts = () => {
       default:
         break;
     }
-    
+
     setFilteredProducts(result);
     setCurrentPage(1); // Reset to first page when filters change
   }, [products, searchTerm, categoryFilter, stockFilter, sortOption]);
@@ -146,9 +100,9 @@ const RegisteredProducts = () => {
 
   // Handle product selection
   const toggleProductSelection = (id) => {
-    setSelectedProducts(prev => 
-      prev.includes(id) 
-        ? prev.filter(p => p !== id) 
+    setSelectedProducts(prev =>
+      prev.includes(id)
+        ? prev.filter(p => p !== id)
         : [...prev, id]
     );
   };
@@ -186,10 +140,28 @@ const RegisteredProducts = () => {
   };
 
   const saveEditedProduct = (updatedProduct) => {
-    setProducts(prev => 
+    setProducts(prev =>
       prev.map(p => p.id === updatedProduct.id ? updatedProduct : p)
     );
     setEditingProduct(null);
+  };
+
+  // Handle add new product
+  const handleAddNew = () => {
+    const newProduct = {
+      id: Math.max(0, ...products.map(p => p.id)) + 1,
+      name: "",
+      barcode: "",
+      category: "",
+      metalType: "",
+      purity: "",
+      weight: 0,
+      price: 0,
+      stock: 0,
+      image: "https://via.placeholder.com/80",
+      lastUpdated: new Date().toISOString().split('T')[0]
+    };
+    setEditingProduct(newProduct);
   };
 
   return (
@@ -198,13 +170,13 @@ const RegisteredProducts = () => {
       <div className="products-header">
         <h2>Registered Products</h2>
         <div className="header-actions">
-          <button className="add-btn">
+          <button className="add-btn" onClick={handleAddNew}>
             ➕ Add New Product
           </button>
           <button className="export-btn">
             ⬇️ Export
           </button>
-          <button 
+          <button
             className="refresh-btn"
             onClick={() => window.location.reload()}
           >
@@ -267,82 +239,86 @@ const RegisteredProducts = () => {
 
       {/* Product Table */}
       <div className="products-table-container">
-        <table className="products-table">
-          <thead>
-            <tr>
-              <th>
-                <input
-                  type="checkbox"
-                  checked={selectedProducts.length === currentItems.length && currentItems.length > 0}
-                  onChange={toggleSelectAll}
-                />
-              </th>
-              <th>Image</th>
-              <th>Product Name</th>
-              <th>Barcode No.</th>
-              <th>Category</th>
-              <th>Metal</th>
-              <th>Price</th>
-              <th>Stock</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {currentItems.length > 0 ? (
-              currentItems.map(product => (
-                <tr 
-                  key={product.id} 
-                  className={product.stock < 5 ? 'low-stock' : ''}
-                >
-                  <td>
-                    <input
-                      type="checkbox"
-                      checked={selectedProducts.includes(product.id)}
-                      onChange={() => toggleProductSelection(product.id)}
-                    />
-                  </td>
-                  <td>
-                    <img 
-                      src={product.image} 
-                      alt={product.name} 
-                      className="product-image"
-                    />
-                  </td>
-                  <td>{product.name}</td>
-                  <td>{product.barcode}</td>
-                  <td>{product.category}</td>
-                  <td>{product.metalType} {product.purity}</td>
-                  <td>₹{product.price.toLocaleString()}</td>
-                  <td>
-                    <span className={`stock-badge ${product.stock === 0 ? 'out-stock' : ''}`}>
-                      {product.stock} pcs
-                    </span>
-                  </td>
-                  <td>
-                    <button 
-                      className="edit-btn"
-                      onClick={() => handleEdit(product)}
-                    >
-                      Edit
-                    </button>
-                    <button 
-                      className="delete-btn"
-                      onClick={() => handleDelete(product.id)}
-                    >
-                      Delete
-                    </button>
+        {isLoading ? (
+          <div className="loading">Loading products...</div>
+        ) : (
+          <table className="products-table">
+            <thead>
+              <tr>
+                <th>
+                  <input
+                    type="checkbox"
+                    checked={selectedProducts.length === currentItems.length && currentItems.length > 0}
+                    onChange={toggleSelectAll}
+                  />
+                </th>
+                <th>Image</th>
+                <th>Product Name</th>
+                <th>Barcode No.</th>
+                <th>Category</th>
+                <th>Metal</th>
+                <th>Price</th>
+                <th>Stock</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {currentItems.length > 0 ? (
+                currentItems.map(product => (
+                  <tr 
+                    key={product.id} 
+                    className={product.stock < 5 ? 'low-stock' : ''}
+                  >
+                    <td>
+                      <input
+                        type="checkbox"
+                        checked={selectedProducts.includes(product.id)}
+                        onChange={() => toggleProductSelection(product.id)}
+                      />
+                    </td>
+                    <td>
+                      <img 
+                        src={product.image} 
+                        alt={product.name} 
+                        className="product-image"
+                      />
+                    </td>
+                    <td>{product.name}</td>
+                    <td>{product.barcode}</td>
+                    <td>{product.category}</td>
+                    <td>{product.metalType} {product.purity}</td>
+                    <td>₹{product.price.toLocaleString()}</td>
+                    <td>
+                      <span className={`stock-badge ${product.stock === 0 ? 'out-stock' : ''}`}>
+                        {product.stock} pcs
+                      </span>
+                    </td>
+                    <td>
+                      <button 
+                        className="edit-btn"
+                        onClick={() => handleEdit(product)}
+                      >
+                        Edit
+                      </button>
+                      <button 
+                        className="delete-btn"
+                        onClick={() => handleDelete(product.id)}
+                      >
+                        Delete
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="9" className="no-products">
+                    {products.length === 0 ? 'No products registered yet' : 'No products found matching your criteria'}
                   </td>
                 </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan="9" className="no-products">
-                  No products found matching your criteria
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+              )}
+            </tbody>
+          </table>
+        )}
       </div>
 
       {/* Bulk Actions & Pagination */}
@@ -419,7 +395,7 @@ const RegisteredProducts = () => {
       {editingProduct && (
         <div className="modal-overlay">
           <div className="edit-modal">
-            <h3>Edit Product</h3>
+            <h3>{editingProduct.id ? 'Edit Product' : 'Add New Product'}</h3>
             <div className="edit-form">
               <div className="form-group">
                 <label>Product Name</label>
@@ -437,6 +413,7 @@ const RegisteredProducts = () => {
                     value={editingProduct.category}
                     onChange={(e) => setEditingProduct({...editingProduct, category: e.target.value})}
                   >
+                    <option value="">Select Category</option>
                     {categories.filter(c => c !== 'All').map(cat => (
                       <option key={cat} value={cat}>{cat}</option>
                     ))}
@@ -475,6 +452,26 @@ const RegisteredProducts = () => {
                 </div>
               </div>
               
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Metal Type</label>
+                  <input
+                    type="text"
+                    value={editingProduct.metalType}
+                    onChange={(e) => setEditingProduct({...editingProduct, metalType: e.target.value})}
+                  />
+                </div>
+                
+                <div className="form-group">
+                  <label>Purity</label>
+                  <input
+                    type="text"
+                    value={editingProduct.purity}
+                    onChange={(e) => setEditingProduct({...editingProduct, purity: e.target.value})}
+                  />
+                </div>
+              </div>
+              
               <div className="modal-actions">
                 <button 
                   className="cancel-btn"
@@ -486,7 +483,7 @@ const RegisteredProducts = () => {
                   className="save-btn"
                   onClick={() => saveEditedProduct(editingProduct)}
                 >
-                  Save Changes
+                  {editingProduct.id ? 'Save Changes' : 'Add Product'}
                 </button>
               </div>
             </div>

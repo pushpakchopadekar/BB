@@ -1,103 +1,82 @@
-import React, { useState, useEffect } from 'react';
-import './ProductRegistration.css';
+import React, { useState } from 'react';
+import JsBarcode from 'jsbarcode';
+import '../ProductRegistration/ProductRegistration.css';
 
-const ProductRegistration = ({ goldRate, silverRate }) => {
+const ProductRegistration = () => {
   const [product, setProduct] = useState({
     name: '',
     category: '',
-    subCategory: '',
-    description: '',
     weight: '',
-    metalType: 'Gold',
-    purity: '22K',
-    hsnCode: '7113',
-    baseRate: '',
-    makingCharges: '',
-    makingType: 'percentage', // 'fixed' or 'percentage'
-    wastage: 0,
-    gst: 3,
+    purchasePrice: '',
+    sellingPrice: '',
     quantity: 1,
-    location: 'Main Store',
     images: []
   });
 
   const [previewImage, setPreviewImage] = useState(null);
-  const [totalPrice, setTotalPrice] = useState(0);
-  const [sku, setSku] = useState('');
-  const [categories] = useState([
-    'Ring', 'Necklace', 'Earrings', 'Bangles', 'Pendant', 'Bracelet', 'Chain', 'Nose Pin', 'Anklet', 'Other'
-  ]);
+  const [barcode, setBarcode] = useState('');
+  const [barcodeImage, setBarcodeImage] = useState(null);
+  const [showBarcode, setShowBarcode] = useState(false);
+  const [barcodeGenerated, setBarcodeGenerated] = useState(false);
+  const [showSuccessPopup, setShowSuccessPopup] = useState(false);
 
-  // Generate SKU on component mount
-  useEffect(() => {
-    generateSKU();
-  }, []);
+  const categories = ['Gold', 'Silver', 'Emitation'];
 
-  // Calculate total price when relevant fields change
-  useEffect(() => {
-    calculateTotalPrice();
-  }, [product.weight, product.metalType, product.purity, product.baseRate, 
-      product.makingCharges, product.makingType, product.wastage, product.gst]);
-
-  const generateSKU = () => {
-    const randomNum = Math.floor(1000 + Math.random() * 9000);
+  const generateBarcodeNumber = () => {
+    const randomNum = Math.floor(100000 + Math.random() * 900000);
     const date = new Date();
-    const skuCode = `JWL-${date.getFullYear()}${(date.getMonth()+1).toString().padStart(2, '0')}-${randomNum}`;
-    setSku(skuCode);
+    return `BRC-${date.getFullYear()}${(date.getMonth()+1).toString().padStart(2, '0')}-${randomNum}`;
   };
 
-  const calculateTotalPrice = () => {
-    if (!product.weight || isNaN(product.weight)) return;
-
-    let basePrice = 0;
-    
-   
-    if (product.baseRate && !isNaN(product.baseRate)) {
-      basePrice = parseFloat(product.baseRate) * parseFloat(product.weight);
-    } else {
-      // Auto-calculate based on metal type and purity
-      let ratePerGram = 0;
-      
-      if (product.metalType === 'Gold') {
-        if (product.purity === '24K') ratePerGram = goldRate;
-        else if (product.purity === '22K') ratePerGram = goldRate * 0.916;
-        else if (product.purity === '18K') ratePerGram = goldRate * 0.75;
-      } 
-      else if (product.metalType === 'Silver') {
-        ratePerGram = silverRate;
-        if (product.purity === '92.5 Sterling Silver') ratePerGram = silverRate * 0.925;
-      }
-      
-      basePrice = ratePerGram * parseFloat(product.weight);
+  const generateBarcode = () => {
+    if (barcodeGenerated) {
+      alert('Barcode already generated for this product. Please submit or reset the form.');
+      return;
     }
 
-    // Calculate making charges
-    let makingCharges = 0;
-    if (product.makingCharges && !isNaN(product.makingCharges)) {
-      if (product.makingType === 'percentage') {
-        makingCharges = basePrice * (parseFloat(product.makingCharges) / 100);
-      } else {
-        makingCharges = parseFloat(product.makingCharges);
-      }
+    if (!product.name || !product.category) {
+      alert('Please fill in required product information first');
+      return;
     }
 
-    // Calculate wastage
-    const wastageAmount = basePrice * (parseFloat(product.wastage) / 100 || 0);
+    const newBarcode = generateBarcodeNumber();
+    setBarcode(newBarcode);
 
-    // Calculate subtotal
-    const subtotal = basePrice + makingCharges + wastageAmount;
+    const canvas = document.createElement("canvas");
 
-    // Calculate GST
-    const gstAmount = subtotal * (parseFloat(product.gst) / 100);
+    try {
+      JsBarcode(canvas, newBarcode, {
+        format: "CODE128",
+        lineColor: "#000",
+        width: 2,
+        height: 60,
+        displayValue: false,
+      });
 
-    // Calculate final price
-    const finalPrice = subtotal + gstAmount;
-
-    setTotalPrice(finalPrice);
+      const imageUrl = canvas.toDataURL("image/png");
+      setBarcodeImage(imageUrl);
+      setShowBarcode(true);
+      setBarcodeGenerated(true);
+    } catch (error) {
+      console.error("Barcode generation error:", error);
+      alert("Failed to generate barcode. Please try again.");
+    }
   };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+
+    if (barcodeGenerated && (name === 'name' || name === 'category')) {
+      if (window.confirm('Changing product information will reset the barcode. Continue?')) {
+        setBarcode('');
+        setBarcodeImage(null);
+        setShowBarcode(false);
+        setBarcodeGenerated(false);
+      } else {
+        return;
+      }
+    }
+
     setProduct(prev => ({
       ...prev,
       [name]: value
@@ -121,41 +100,100 @@ const ProductRegistration = ({ goldRate, silverRate }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Here you would typically send the data to your backend
+    if (!barcode) {
+      alert('Please generate a barcode before submitting');
+      return;
+    }
+
     console.log('Product submitted:', {
       ...product,
-      sku,
-      totalPrice
+      barcode
     });
-    
-    // Reset form after submission
+
+    // Show success popup
+    setShowSuccessPopup(true);
+    setTimeout(() => {
+      setShowSuccessPopup(false);
+    }, 3000);
+
+    // Reset form
+    resetForm();
+  };
+
+  const resetForm = () => {
     setProduct({
       name: '',
       category: '',
-      subCategory: '',
-      description: '',
       weight: '',
-      metalType: 'Gold',
-      purity: '22K',
-      hsnCode: '7113',
-      baseRate: '',
-      makingCharges: '',
-      makingType: 'percentage',
-      wastage: 0,
-      gst: 3,
+      purchasePrice: '',
+      sellingPrice: '',
       quantity: 1,
-      location: 'Main Store',
       images: []
     });
     setPreviewImage(null);
-    generateSKU();
-    alert('Product registered successfully!');
+    setBarcodeImage(null);
+    setShowBarcode(false);
+    setBarcode('');
+    setBarcodeGenerated(false);
+  };
+
+  const downloadBarcode = () => {
+    if (!barcodeImage) return;
+
+    const link = document.createElement('a');
+    link.href = barcodeImage;
+    link.download = `barcode_${barcode}.png`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const printBarcode = () => {
+    if (!barcodeImage) return;
+
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>Print Barcode</title>
+          <style>
+            body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }
+            .barcode-container { margin: 20px auto; max-width: 300px; }
+            .barcode-info { text-align: left; margin-top: 20px; max-width: 250px; }
+          </style>
+        </head>
+        <body>
+          <h2>Product Barcode</h2>
+          <div class="barcode-container">
+            <img src="${barcodeImage}" alt="Barcode" style="max-width:100%;" />
+          </div>
+          <div class="barcode-info">
+            <h3>Product Information</h3>
+            <p><strong>Barcode:</strong> ${barcode}</p>
+            <p><strong>Name:</strong> ${product.name}</p>
+            <p><strong>Category:</strong> ${product.category}</p>
+            ${product.category === 'Gold' || product.category === 'Silver' ? 
+              `<p><strong>Weight:</strong> ${product.weight} grams</p>` : 
+              `<p><strong>Price:</strong> ₹${product.sellingPrice}</p>`}
+          </div>
+          <script>
+            window.onload = function() {
+              setTimeout(function() {
+                window.print();
+                window.close();
+              }, 200);
+            }
+          </script>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
   };
 
   return (
     <div className="product-registration">
-      <h2>Jewellery Product Registration</h2>
-      
+      <h2>Product Registration</h2>
+
       <form onSubmit={handleSubmit}>
         <div className="form-section">
           <h3>Basic Product Information</h3>
@@ -170,7 +208,7 @@ const ProductRegistration = ({ goldRate, silverRate }) => {
                 required
               />
             </div>
-            
+
             <div className="form-group">
               <label>Category*</label>
               <select 
@@ -186,33 +224,8 @@ const ProductRegistration = ({ goldRate, silverRate }) => {
               </select>
             </div>
           </div>
-          
-          <div className="form-row">
-            <div className="form-group">
-              <label>Sub-category</label>
-              <input 
-                type="text" 
-                name="subCategory" 
-                value={product.subCategory}
-                onChange={handleChange}
-              />
-            </div>
-            
-            <div className="form-group">
-              <label>Description</label>
-              <textarea 
-                name="description" 
-                value={product.description}
-                onChange={handleChange}
-                rows="2"
-              />
-            </div>
-          </div>
-        </div>
-        
-        <div className="form-section">
-          <h3>Jewellery Specifications</h3>
-          <div className="form-row">
+
+          {product.category === 'Gold' || product.category === 'Silver' ? (
             <div className="form-group">
               <label>Weight (grams)*</label>
               <input 
@@ -225,153 +238,39 @@ const ProductRegistration = ({ goldRate, silverRate }) => {
                 required
               />
             </div>
-            
-            <div className="form-group">
-              <label>Metal Type*</label>
-              <select 
-                name="metalType" 
-                value={product.metalType}
-                onChange={handleChange}
-                required
-              >
-                <option value="Gold">Gold</option>
-                <option value="Silver">Silver</option>
-                <option value="Diamond">Diamond</option>
-                <option value="Platinum">Platinum</option>
-              </select>
-            </div>
-          </div>
-          
-          <div className="form-row">
-            <div className="form-group">
-              <label>Purity*</label>
-              <select 
-                name="purity" 
-                value={product.purity}
-                onChange={handleChange}
-                required
-              >
-                {product.metalType === 'Gold' && (
-                  <>
-                    <option value="24K">24K (99.9%)</option>
-                    <option value="22K">22K (91.6%)</option>
-                    <option value="18K">18K (75%)</option>
-                  </>
-                )}
-                {product.metalType === 'Silver' && (
-                  <>
-                    <option value="99.9">99.9% Pure Silver</option>
-                    <option value="92.5 Sterling Silver">92.5% Sterling Silver</option>
-                  </>
-                )}
-                {(product.metalType === 'Diamond' || product.metalType === 'Platinum') && (
-                  <option value="N/A">Not Applicable</option>
-                )}
-              </select>
-            </div>
-            
-            <div className="form-group">
-              <label>HSN Code*</label>
-              <input 
-                type="text" 
-                name="hsnCode" 
-                value={product.hsnCode}
-                onChange={handleChange}
-                required
-              />
-            </div>
-          </div>
-        </div>
-        
-        <div className="form-section">
-          <h3>Pricing Details</h3>
-          <div className="form-row">
-            <div className="form-group">
-              <label>Base Rate (per gram)</label>
-              <div className="input-with-symbol">
-                <span>₹</span>
+          ) : (
+            <div className="form-row">
+              <div className="form-group">
+                <label>Purchase Price*</label>
                 <input 
                   type="number" 
-                  name="baseRate" 
-                  value={product.baseRate}
+                  name="purchasePrice" 
+                  value={product.purchasePrice}
                   onChange={handleChange}
                   step="0.01"
                   min="0"
-                  placeholder="Leave empty for auto-calculation"
+                  required
                 />
               </div>
-            </div>
-            
-            <div className="form-group">
-              <label>Making Charges</label>
-              <div className="making-charges-group">
+              <div className="form-group">
+                <label>Selling Price*</label>
                 <input 
                   type="number" 
-                  name="makingCharges" 
-                  value={product.makingCharges}
+                  name="sellingPrice" 
+                  value={product.sellingPrice}
                   onChange={handleChange}
                   step="0.01"
                   min="0"
+                  required
                 />
-                <select 
-                  name="makingType" 
-                  value={product.makingType}
-                  onChange={handleChange}
-                >
-                  <option value="percentage">%</option>
-                  <option value="fixed">₹ Fixed</option>
-                </select>
               </div>
             </div>
-          </div>
-          
-          <div className="form-row">
-            <div className="form-group">
-              <label>Wastage (%)</label>
-              <input 
-                type="number" 
-                name="wastage" 
-                value={product.wastage}
-                onChange={handleChange}
-                step="0.01"
-                min="0"
-                max="10"
-              />
-            </div>
-            
-            <div className="form-group">
-              <label>GST (%)</label>
-              <input 
-                type="number" 
-                name="gst" 
-                value={product.gst}
-                onChange={handleChange}
-                step="0.01"
-                min="0"
-                max="28"
-              />
-            </div>
-          </div>
-          
-          <div className="price-summary">
-            <h4>Calculated Price: ₹{totalPrice.toFixed(2)}</h4>
-            <p>(Including all charges and GST)</p>
-          </div>
+          )}
         </div>
-        
+
         <div className="form-section">
           <h3>Inventory Details</h3>
           <div className="form-row">
-            <div className="form-group">
-              <label>SKU/Barcode</label>
-              <input 
-                type="text" 
-                value={sku}
-                readOnly
-                className="read-only"
-              />
-            </div>
-            
             <div className="form-group">
               <label>Quantity*</label>
               <input 
@@ -383,57 +282,126 @@ const ProductRegistration = ({ goldRate, silverRate }) => {
                 required
               />
             </div>
-          </div>
-          
-          <div className="form-group">
-            <label>Location</label>
-            <select 
-              name="location" 
-              value={product.location}
-              onChange={handleChange}
-            >
-              <option value="Main Store">Main Store</option>
-              <option value="Display-1">Display-1</option>
-              <option value="Display-2">Display-2</option>
-              <option value="Warehouse">Warehouse</option>
-            </select>
-          </div>
-        </div>
-        
-        <div className="form-section">
-          <h3>Product Images</h3>
-          <div className="image-upload-container">
-            <div className="image-preview">
-              {previewImage ? (
-                <img src={previewImage} alt="Product preview" />
-              ) : (
-                <div className="placeholder">No image selected</div>
-              )}
-            </div>
-            <div className="upload-controls">
-              <label className="upload-btn">
-                Upload Image
-                <input 
-                  type="file" 
-                  accept="image/*"
-                  onChange={handleImageUpload}
-                  style={{ display: 'none' }}
-                />
-              </label>
-              <p>Maximum file size: 2MB</p>
+
+            <div className="form-group">
+              <label>Barcode Number</label>
+              <input 
+                type="text" 
+                value={barcode}
+                readOnly
+                className="read-only"
+                placeholder={barcodeGenerated ? "Barcode generated" : "Click 'Generate Barcode' to create"}
+              />
             </div>
           </div>
         </div>
-        
+
+        <div className="image-barcode-container">
+          <div className="form-section image-section">
+            <h3>Product Image</h3>
+            <div className="image-upload-container">
+              <div className="image-preview">
+                {previewImage ? (
+                  <img src={previewImage} alt="Product preview" />
+                ) : (
+                  <div className="placeholder">No image selected</div>
+                )}
+              </div>
+              <div className="upload-controls">
+                <label className="upload-btn">
+                  Upload Image
+                  <input 
+                    type="file" 
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    style={{ display: 'none' }}
+                  />
+                </label>
+                <p>Maximum file size: 2MB</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="form-section barcode-section">
+            <h3>Barcode Generation</h3>
+            <div className="form-row">
+              <div className="form-group">
+                <button 
+                  type="button" 
+                  className="generate-barcode-btn"
+                  onClick={generateBarcode}
+                  disabled={barcodeGenerated}
+                >
+                  {barcodeGenerated ? "Barcode Generated" : "Generate Barcode"}
+                </button>
+              </div>
+            </div>
+
+            {showBarcode && (
+              <div className="barcode-display-container">
+                <div className="barcode-content">
+                  <div className="barcode-image-container">
+                    <img src={barcodeImage} alt="Barcode" />
+                  </div>
+                  <div className="barcode-info">
+                    <h4>Product Information</h4>
+                    <p><strong>Barcode:</strong> {barcode}</p>
+                    <p><strong>Name:</strong> {product.name}</p>
+                    <p><strong>Category:</strong> {product.category}</p>
+                    {product.category === 'Gold' || product.category === 'Silver' ? (
+                      <p><strong>Weight:</strong> {product.weight} grams</p>
+                    ) : (
+                      <p><strong>Price:</strong> ₹{product.sellingPrice}</p>
+                    )}
+                  </div>
+                </div>
+                <div className="barcode-actions">
+                  <button 
+                    type="button" 
+                    className="download-barcode-btn"
+                    onClick={downloadBarcode}
+                  >
+                    Download Barcode
+                  </button>
+                  <button 
+                    type="button" 
+                    className="print-barcode-btn"
+                    onClick={printBarcode}
+                  >
+                    Print Barcode
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
         <div className="form-actions">
-          <button type="button" className="cancel-btn">
+          <button 
+            type="button" 
+            className="cancel-btn"
+            onClick={resetForm}
+          >
             Cancel
           </button>
-          <button type="submit" className="submit-btn">
+          <button 
+            type="submit" 
+            className="submit-btn"
+            disabled={!barcodeGenerated}
+          >
             Register Product
           </button>
         </div>
       </form>
+
+      {/* Success Popup */}
+      {showSuccessPopup && (
+        <div className="success-popup">
+          <div className="popup-content">
+            ✅ Product registered successfully!
+          </div>
+        </div>
+      )}
     </div>
   );
 };

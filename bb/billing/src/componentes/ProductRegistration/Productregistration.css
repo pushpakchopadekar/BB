@@ -1,196 +1,275 @@
 .product-registration {
-    padding: 20px;
-    background-color: #fff;
-    border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  }
-  
-  .product-registration h2 {
-    color: #b8860b;
-    margin-bottom: 20px;
-    font-size: 24px;
-  }
-  
-  .form-section {
-    margin-bottom: 25px;
-    padding: 15px;
-    background-color: #f9f9f9;
-    border-radius: 5px;
-  }
-  
-  .form-section h3 {
-    color: #555;
-    margin-bottom: 15px;
-    font-size: 18px;
-    border-bottom: 1px solid #ddd;
-    padding-bottom: 8px;
+  padding: 20px;
+  background-color: #efefee;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  margin: 0 auto;
+}
+
+.product-registration h2 {
+  color: #b8860b;
+  margin-bottom: 20px;
+  font-size: 24px;
+  text-align: center;
+}
+
+.form-section {
+  margin-bottom: 25px;
+  padding: 15px;
+  background-color: #EDE7DF;
+  border-radius: 5px;
+}
+
+.form-section h3 {
+  color: #555;
+  margin-bottom: 15px;
+  font-size: 18px;
+  border-bottom: 1px solid #ddd;
+  padding-bottom: 8px;
+}
+
+.form-row {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 15px;
+}
+
+.form-group {
+  flex: 1;
+  margin-bottom: 10px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: 500;
+  color: #555;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.image-barcode-container {
+  display: flex;
+  gap: 20px;
+}
+
+.image-section {
+  flex: 1;
+}
+
+.barcode-section {
+  flex: 1;
+}
+
+.image-upload-container {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.image-preview {
+  width: 100%;
+  height: 200px;
+  border: 1px dashed #ccc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.image-preview img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.image-preview .placeholder {
+  color: #999;
+  font-size: 14px;
+}
+
+.upload-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.upload-btn {
+  display: inline-block;
+  padding: 8px 15px;
+  background-color: #f0f0f0;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  cursor: pointer;
+  text-align: center;
+}
+
+.upload-btn:hover {
+  background-color: #e0e0e0;
+}
+
+.generate-barcode-btn {
+  padding: 8px 15px;
+  background-color: #b8860b;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 14px;
+  width: 100%;
+}
+
+.generate-barcode-btn:hover {
+  background-color: #a5770a;
+}
+
+.barcode-display-container {
+  margin-top: 20px;
+}
+
+.barcode-content {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin-bottom: 15px;
+}
+
+.barcode-image-container {
+  padding: 15px;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  text-align: center;
+}
+
+.barcode-image-container img {
+  max-width: 100%;
+  height: 60px;
+}
+
+.barcode-info {
+  padding: 15px;
+  background-color: #d4eafe;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.barcode-info h4 {
+  margin-top: 0;
+  color: #333;
+  border-bottom: 1px solid #ddd;
+  padding-bottom: 8px;
+}
+
+.barcode-info p {
+  margin: 8px 0;
+}
+
+.barcode-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+.download-barcode-btn,
+.print-barcode-btn {
+  padding: 8px 15px;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+}.success-popup {
+  position: fixed;
+  bottom: 17%;
+  right: 50%;
+  transform: translate(50%, 50%);
+  background-color: #4CAF50;
+  color: white;
+  padding: 18px 28px;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: bold;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+  animation: fadeSlideInOut 3s ease-in-out forwards;
+  z-index: 9999;
+}
+
+@keyframes fadeInOut {
+  0% { opacity: 0; transform: translateY(20px); }
+  10% { opacity: 1; transform: translateY(0); }
+  90% { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(20px); }
+}
+
+.download-barcode-btn:hover,
+.print-barcode-btn:hover {
+  background-color: #45a049;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.cancel-btn, .submit-btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 14px;
+
+}
+
+.cancel-btn {
+  background-color: #f0f0f0;
+  color: #555;
+  max-width: 160px;
+  height: 50px;
+}
+
+.cancel-btn:hover {
+  background-color: #e0e0e0;
+}
+
+.submit-btn {
+  background-color: #4CAF50;
+  color: white;
+ max-width: 160px;
+ height: 50px;
+}
+
+.submit-btn:hover {
+  background-color: #45a049;
+}
+
+.read-only {
+  background-color: #f5f5f5;
+  cursor: not-allowed;
+}
+
+@media (max-width: 768px) {
+  .image-barcode-container {
+    flex-direction: column;
   }
   
   .form-row {
-    display: flex;
-    gap: 20px;
-    margin-bottom: 15px;
+    flex-direction: column;
+    gap: 15px;
   }
-  
-  .form-group {
-    flex: 1;
-    margin-bottom: 10px;
-  }
-  
-  .form-group label {
-    display: block;
-    margin-bottom: 5px;
-    font-weight: 500;
-    color: #555;
-  }
-  
-  .form-group input,
-  .form-group select,
-  .form-group textarea {
-    width: 100%;
-    padding: 8px 12px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-size: 14px;
-  }
-  
-  .form-group textarea {
-    resize: vertical;
-    min-height: 60px;
-  }
-  
-  .input-with-symbol {
-    display: flex;
-    align-items: center;
-  }
-  
-  .input-with-symbol span {
-    padding: 8px 10px;
-    background-color: #f0f0f0;
-    border: 1px solid #ddd;
-    border-right: none;
-    border-radius: 4px 0 0 4px;
-  }
-  
-  .input-with-symbol input {
-    border-radius: 0 4px 4px 0;
-  }
-  
-  .making-charges-group {
-    display: flex;
-  }
-  
-  .making-charges-group input {
-    border-radius: 4px 0 0 4px;
-  }
-  
-  .making-charges-group select {
-    width: 60px;
-    border-radius: 0 4px 4px 0;
-    border-left: none;
-  }
-  
-  .price-summary {
-    background-color: #f0f8ff;
-    padding: 10px 15px;
-    border-radius: 4px;
-    margin-top: 15px;
-  }
-  
-  .price-summary h4 {
-    color: #006400;
-    margin: 0 0 5px 0;
-  }
-  
-  .price-summary p {
-    margin: 0;
-    font-size: 12px;
-    color: #666;
-  }
-  
-  .image-upload-container {
-    display: flex;
-    gap: 20px;
-    align-items: center;
-  }
-  
-  .image-preview {
-    width: 150px;
-    height: 150px;
-    border: 1px dashed #ccc;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 4px;
-    overflow: hidden;
-  }
-  
-  .image-preview img {
-    max-width: 100%;
-    max-height: 100%;
-  }
-  
-  .image-preview .placeholder {
-    color: #999;
-    font-size: 14px;
-  }
-  
-  .upload-controls {
-    flex: 1;
-  }
-  
-  .upload-btn {
-    display: inline-block;
-    padding: 8px 15px;
-    background-color: #f0f0f0;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    cursor: pointer;
-    margin-bottom: 5px;
-  }
-  
-  .upload-btn:hover {
-    background-color: #e0e0e0;
-  }
-  
-  .form-actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 10px;
-    margin-top: 20px;
-  }
-  
-  .cancel-btn, .submit-btn {
-    padding: 10px 20px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-weight: 500;
-  }
-  
-  .cancel-btn {
-    background-color: #f0f0f0;
-    color: #555;
-  }
-  
-  .cancel-btn:hover {
-    background-color: #e0e0e0;
-  }
-  
-  .submit-btn {
-    background-color: #b8860b;
-    color: white;
-  }
-  
-  .submit-btn:hover {
-    background-color: #a5770a;
-  }
-  
-  .read-only {
-    background-color: #f5f5f5;
-    cursor: not-allowed;
-  }
-  
-  .warning {
-    color: #d9534f;
-  }
+}
