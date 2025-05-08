@@ -1,0 +1,439 @@
+.sales-history {
+    padding: 20px;
+    background-color: #f9f9f9;
+    min-height: 100vh;
+  }
+  
+  /* Header Section */
+  .sales-history-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 15px;
+  }
+  
+  .sales-history-header h1 {
+    color: #333;
+    margin: 0;
+  }
+  
+  .action-buttons {
+    display: flex;
+    gap: 10px;
+  }
+  
+  .export-btn {
+    padding: 8px 15px;
+    background-color: #16a085;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 14px;
+  }
+  
+  .export-btn:hover {
+    background-color: #1abc9c;
+  }
+  
+  /* Filters Section */
+  .filters-section {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-bottom: 20px;
+    background: white;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  }
+  
+  .date-filters {
+    display: flex;
+    gap: 15px;
+  }
+  
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+  
+  .form-group label {
+    font-size: 14px;
+    color: #555;
+  }
+  
+  .form-group input, 
+  .form-group select,
+  .search-filter input,
+  .status-filter select {
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+  }
+  
+  .search-filter {
+    flex: 1;
+    min-width: 250px;
+  }
+  
+  .search-filter input {
+    width: 100%;
+  }
+  
+  .status-filter select {
+    min-width: 150px;
+  }
+  
+  /* Sales Table */
+  .sales-table-container {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    overflow-x: auto;
+  }
+  
+  .sales-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  
+  .sales-table th {
+    background-color: #f5f5f5;
+    padding: 12px 15px;
+    text-align: left;
+    font-weight: 600;
+    color: #333;
+    border-bottom: 2px solid #eee;
+    cursor: pointer;
+  }
+  
+  .sales-table td {
+    padding: 12px 15px;
+    border-bottom: 1px solid #eee;
+    color: #555;
+  }
+  
+  .sales-table tr:hover {
+    background-color: #f9f9f9;
+  }
+  
+  .invoice-link {
+    background: none;
+    border: none;
+    color: #16a085;
+    text-decoration: underline;
+    cursor: pointer;
+    padding: 0;
+    font-size: inherit;
+  }
+  
+  .status-badge {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 500;
+  }
+  
+  .status-badge.paid {
+    background-color: #e8f8f5;
+    color: #16a085;
+  }
+  
+  .status-badge.pending {
+    background-color: #fef9e7;
+    color: #f39c12;
+  }
+  
+  .action-buttons {
+    display: flex;
+    gap: 8px;
+  }
+  
+  .view-btn, .pdf-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    padding: 5px;
+  }
+  
+  .view-btn {
+    color: #3498db;
+  }
+  
+  .pdf-btn {
+    color: #e74c3c;
+  }
+  
+  /* Pagination */
+  .pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 15px;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  
+  .pagination button {
+    padding: 5px 10px;
+    background: #f5f5f5;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  
+  .pagination button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  
+  .pagination select {
+    padding: 5px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+  }
+  
+  /* Invoice Modal */
+  .modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0,0,0,0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+  }
+  
+  .invoice-modal {
+    background: white;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 800px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+  }
+  
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    border-bottom: 1px solid #eee;
+  }
+  
+  .modal-header h2 {
+    margin: 0;
+    color: #333;
+  }
+  
+  .close-btn {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #777;
+  }
+  
+  .modal-content {
+    padding: 20px;
+  }
+  
+  .invoice-preview {
+    font-family: Arial, sans-serif;
+    color: #333;
+  }
+  
+  .invoice-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 20px;
+  }
+  
+  .business-info h2 {
+    margin: 0 0 5px 0;
+    color: #16a085;
+  }
+  
+  .invoice-meta h3 {
+    margin: 0 0 5px 0;
+  }
+  
+  .customer-info {
+    margin-bottom: 20px;
+    padding: 10px;
+    background: #f9f9f9;
+    border-radius: 4px;
+  }
+  
+  .customer-info h4 {
+    margin: 0 0 10px 0;
+  }
+  
+  .invoice-items {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+  }
+  
+  .invoice-items th {
+    background: #f5f5f5;
+    padding: 10px;
+    text-align: left;
+  }
+  
+  .invoice-items td {
+    padding: 10px;
+    border-bottom: 1px solid #eee;
+  }
+  
+  .invoice-totals {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 2px solid #eee;
+  }
+  
+  .total-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+  
+  .total-row span:last-child {
+    font-weight: bold;
+  }
+  
+  .modal-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+    flex-wrap: wrap;
+  }
+  
+  .print-btn, .pdf-btn, .whatsapp-btn {
+    padding: 10px 15px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 14px;
+  }
+  
+  .print-btn {
+    background-color: #3498db;
+    color: white;
+  }
+  
+  .pdf-btn {
+    background-color: #e74c3c;
+    color: white;
+  }
+  
+  .whatsapp-btn {
+    background-color: #25D366;
+    color: white;
+  }
+  
+  /* Responsive Design */
+  @media (max-width: 768px) {
+    .filters-section {
+      flex-direction: column;
+    }
+    
+    .date-filters {
+      flex-direction: column;
+      gap: 10px;
+    }
+    
+    .sales-table th, 
+    .sales-table td {
+      padding: 8px 10px;
+      font-size: 14px;
+    }
+    
+    .invoice-header {
+      flex-direction: column;
+    }
+  }
+  
+  /* Dark Mode Support */
+  .dark-mode .sales-history {
+    background-color: #121212;
+    color: #fff;
+  }
+  
+  .dark-mode .sales-history-header h1 {
+    color: #fff;
+  }
+  
+  .dark-mode .filters-section,
+  .dark-mode .sales-table-container,
+  .dark-mode .invoice-modal {
+    background: #1e1e1e;
+    color: #fff;
+  }
+  
+  .dark-mode .form-group input,
+  .dark-mode .form-group select,
+  .dark-mode .search-filter input,
+  .dark-mode .status-filter select {
+    background: #2d2d2d;
+    color: #fff;
+    border-color: #444;
+  }
+  
+  .dark-mode .sales-table th {
+    background-color: #2d2d2d;
+    color: #fff;
+  }
+  
+  .dark-mode .sales-table td {
+    color: #ddd;
+    border-bottom-color: #444;
+  }
+  
+  .dark-mode .sales-table tr:hover {
+    background-color: #2d2d2d;
+  }
+  
+  .dark-mode .invoice-link {
+    color: #1abc9c;
+  }
+  
+  .dark-mode .pagination button {
+    background: #2d2d2d;
+    color: #fff;
+    border-color: #444;
+  }
+  
+  .dark-mode .customer-info {
+    background: #2d2d2d;
+  }
+  
+  .dark-mode .invoice-items th {
+    background: #2d2d2d;
+  }
+  
+  .dark-mode .invoice-items td {
+    border-bottom-color: #444;
+  }
+  
+  .dark-mode .invoice-totals {
+    border-top-color: #444;
+  }
