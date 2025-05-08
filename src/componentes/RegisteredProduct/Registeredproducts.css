@@ -1,0 +1,384 @@
+/* RegisteredProducts.css */
+
+.registered-products {
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  }
+  
+  /* Header Section */
+  .products-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #eee;
+  }
+  
+  .products-header h2 {
+    color: #b8860b;
+    margin: 0;
+  }
+  
+  .header-actions {
+    display: flex;
+    gap: 10px;
+  }
+  
+  .add-btn, .export-btn, .refresh-btn {
+    padding: 8px 15px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  
+  .add-btn {
+    background-color: #b8860b;
+    color: white;
+  }
+  
+  .export-btn {
+    background-color: #5cb85c;
+    color: white;
+  }
+  
+  .refresh-btn {
+    background-color: #5bc0de;
+    color: white;
+  }
+  
+  /* Search & Filter Section */
+  .products-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-bottom: 20px;
+    padding: 15px;
+    background-color: #f9f9f9;
+    border-radius: 5px;
+  }
+  
+  .search-bar {
+    flex: 1;
+    min-width: 250px;
+    display: flex;
+  }
+  
+  .search-bar input {
+    flex: 1;
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px 0 0 4px;
+    font-size: 14px;
+  }
+  
+  .search-bar button {
+    padding: 8px 15px;
+    background-color: #f0f0f0;
+    border: 1px solid #ddd;
+    border-left: none;
+    border-radius: 0 4px 4px 0;
+    cursor: pointer;
+  }
+  
+  .filter-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  
+  .filter-group label {
+    font-weight: 500;
+    color: #555;
+  }
+  
+  .filter-group select {
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    min-width: 120px;
+  }
+  
+  /* Product Table */
+  .products-table-container {
+    overflow-x: auto;
+  }
+  
+  .products-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 15px;
+  }
+  
+  .products-table th {
+    background-color: #f5f5f5;
+    padding: 12px;
+    text-align: left;
+    font-weight: 500;
+    color: #555;
+  }
+  
+  .products-table td {
+    padding: 12px;
+    border-bottom: 1px solid #eee;
+  }
+  
+  .products-table tr:hover {
+    background-color: #f9f9f9;
+  }
+  
+  .products-table tr.low-stock {
+    background-color: #fff9f9;
+  }
+  
+  .product-image {
+    width: 50px;
+    height: 50px;
+    object-fit: cover;
+    border-radius: 4px;
+  }
+  
+  .stock-badge {
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    background-color: #e8f5e9;
+    color: #2e7d32;
+  }
+  
+  .stock-badge.out-stock {
+    background-color: #ffebee;
+    color: #c62828;
+  }
+  
+  .edit-btn, .delete-btn {
+    padding: 6px 12px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    margin-right: 5px;
+  }
+  
+  .edit-btn {
+    background-color: #5bc0de;
+    color: white;
+  }
+  
+  .delete-btn {
+    background-color: #d9534f;
+    color: white;
+  }
+  
+  .no-products {
+    text-align: center;
+    padding: 30px;
+    color: #777;
+  }
+  
+  /* Bulk Actions & Pagination */
+  .products-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px solid #eee;
+  }
+  
+  .bulk-actions {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+  }
+  
+  .bulk-delete-btn {
+    padding: 6px 12px;
+    background-color: #d9534f;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  
+  .pagination {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+  
+  .items-per-page {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  
+  .items-per-page select {
+    padding: 6px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+  }
+  
+  .page-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  
+  .page-controls button {
+    padding: 6px 10px;
+    background-color: #f0f0f0;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  
+  .page-controls button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  
+  /* Modals */
+  .modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+  }
+  
+  .confirm-modal, .edit-modal {
+    background-color: white;
+    padding: 20px;
+    border-radius: 8px;
+    width: 100%;
+    max-width: 400px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  }
+  
+  .confirm-modal h3, .edit-modal h3 {
+    margin-top: 0;
+    color: #b8860b;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #eee;
+  }
+  
+  .modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 20px;
+  }
+  
+  .cancel-btn, .confirm-btn, .save-btn {
+    padding: 8px 15px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  
+  .cancel-btn {
+    background-color: #f0f0f0;
+    color: #555;
+  }
+  
+  .confirm-btn {
+    background-color: #d9534f;
+    color: white;
+  }
+  
+  .save-btn {
+    background-color: #5cb85c;
+    color: white;
+  }
+  
+  .edit-form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+  }
+  
+  .form-group {
+    margin-bottom: 10px;
+  }
+  
+  .form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 500;
+    color: #555;
+  }
+  
+  .form-group input,
+  .form-group select {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+  }
+  
+  .form-row {
+    display: flex;
+    gap: 15px;
+  }
+  
+  .form-row .form-group {
+    flex: 1;
+  }
+  
+  /* Dark Mode Support */
+  .dark-mode .registered-products,
+  .dark-mode .products-filters,
+  .dark-mode .products-table th,
+  .dark-mode .confirm-modal,
+  .dark-mode .edit-modal {
+    background-color: #444;
+    color: #fff;
+  }
+  
+  .dark-mode .products-table tr:hover,
+  .dark-mode .products-table tr.low-stock {
+    background-color: #555;
+  }
+  
+  .dark-mode .products-table td {
+    border-bottom-color: #555;
+  }
+  
+  .dark-mode .products-header,
+  .dark-mode .confirm-modal h3,
+  .dark-mode .edit-modal h3 {
+    border-bottom-color: #555;
+  }
+  
+  .dark-mode .form-group input,
+  .dark-mode .form-group select,
+  .dark-mode .search-bar input,
+  .dark-mode .filter-group select,
+  .dark-mode .items-per-page select {
+    background-color: #555;
+    color: #fff;
+    border-color: #666;
+  }
+  
+  .dark-mode .stock-badge {
+    background-color: #2d3e2d;
+    color: #7fff7f;
+  }
+  
+  .dark-mode .stock-badge.out-stock {
+    background-color: #3e2d2d;
+    color: #ff7f7f;
+  }
