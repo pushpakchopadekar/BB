@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import '../Dashboard/Dashboard.css';
 import ProductRegistration from '../ProductRegistration/ProductRegistration';
-import StartSale from '../SaleProcess/SaleProcess';
 import RegisteredProducts from '../RegisteredProduct/RegisteredProducts';
+import StartSale from '../SaleProcess/SaleProcess';
 import SalesHistory from '../SalesHistory/SalesHistory';
 
 const Dashboard = ({ onLogout }) => {
@@ -16,6 +16,11 @@ const Dashboard = ({ onLogout }) => {
   const [tempGoldRate, setTempGoldRate] = useState(goldRate);
   const [tempSilverRate, setTempSilverRate] = useState(silverRate);
   const [lastUpdated, setLastUpdated] = useState(new Date().toLocaleString());
+  const [showCustomerFilter, setShowCustomerFilter] = useState(false);
+  const [filterInvoiceNo, setFilterInvoiceNo] = useState('');
+  const [filterCustomerName, setFilterCustomerName] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const customersPerPage = 5;
 
   // Sample data
   const dashboardData = {
@@ -30,12 +35,17 @@ const Dashboard = ({ onLogout }) => {
       { name: "Priya Sharma", amount: 380000 },
       { name: "Vikram Patel", amount: 295000 }
     ],
-    recentTransactions: [
-      { id: 1001, customer: "Rahul Jain", date: "2023-05-15", amount: 12500, status: "Paid" },
-      { id: 1002, customer: "Neha Gupta", date: "2023-05-15", amount: 18500, status: "Unpaid" },
-      { id: 1003, customer: "Amit Singh", date: "2023-05-14", amount: 22500, status: "Paid" },
-      { id: 1004, customer: "Priya Sharma", date: "2023-05-14", amount: 16500, status: "Paid" },
-      { id: 1005, customer: "Vikram Patel", date: "2023-05-13", amount: 28500, status: "Paid" }
+    customerList: [
+      { id: 1001, name: "Rahul Jain", phone: "9876543210", email: "rahul@example.com", totalPurchases: 450000, lastPurchase: "2023-05-15" },
+      { id: 1002, name: "Neha Gupta", phone: "8765432109", email: "neha@example.com", totalPurchases: 380000, lastPurchase: "2023-05-15" },
+      { id: 1003, name: "Amit Singh", phone: "7654321098", email: "amit@example.com", totalPurchases: 22500, lastPurchase: "2023-05-14" },
+      { id: 1004, name: "Priya Sharma", phone: "6543210987", email: "priya@example.com", totalPurchases: 16500, lastPurchase: "2023-05-14" },
+      { id: 1005, name: "Vikram Patel", phone: "5432109876", email: "vikram@example.com", totalPurchases: 28500, lastPurchase: "2023-05-13" },
+      { id: 1006, name: "Sneha Reddy", phone: "4321098765", email: "sneha@example.com", totalPurchases: 32000, lastPurchase: "2023-05-12" },
+      { id: 1007, name: "Arun Kumar", phone: "3210987654", email: "arun@example.com", totalPurchases: 41000, lastPurchase: "2023-05-11" },
+      { id: 1008, name: "Meena Desai", phone: "2109876543", email: "meena@example.com", totalPurchases: 28000, lastPurchase: "2023-05-10" },
+      { id: 1009, name: "Rajesh Iyer", phone: "1098765432", email: "rajesh@example.com", totalPurchases: 35000, lastPurchase: "2023-05-09" },
+      { id: 1010, name: "Anjali Menon", phone: "0987654321", email: "anjali@example.com", totalPurchases: 42000, lastPurchase: "2023-05-08" }
     ],
     salesData: {
       labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
@@ -58,6 +68,7 @@ const Dashboard = ({ onLogout }) => {
   const handleMenuClick = (menu) => {
     console.log('Menu clicked:', menu);
     setActiveMenu(menu);
+    setCurrentPage(1); // Reset to first page when changing menus
   };
 
   const handleEditRates = () => {
@@ -80,6 +91,38 @@ const Dashboard = ({ onLogout }) => {
   const handleLogoutClick = () => {
     onLogout();
   };
+
+  const toggleCustomerFilter = () => {
+    setShowCustomerFilter(!showCustomerFilter);
+  };
+
+  const handleFilterApply = () => {
+    setCurrentPage(1); // Reset to first page when applying filters
+    setShowCustomerFilter(false);
+  };
+
+  const handleFilterReset = () => {
+    setFilterInvoiceNo('');
+    setFilterCustomerName('');
+    setCurrentPage(1);
+    setShowCustomerFilter(false);
+  };
+
+  // Filter customers based on filter criteria
+  const filteredCustomers = dashboardData.customerList.filter(customer => {
+    const matchesInvoice = filterInvoiceNo === '' || customer.id.toString().includes(filterInvoiceNo);
+    const matchesName = filterCustomerName === '' || 
+      customer.name.toLowerCase().includes(filterCustomerName.toLowerCase());
+    return matchesInvoice && matchesName;
+  });
+
+  // Pagination logic
+  const indexOfLastCustomer = currentPage * customersPerPage;
+  const indexOfFirstCustomer = indexOfLastCustomer - customersPerPage;
+  const currentCustomers = filteredCustomers.slice(indexOfFirstCustomer, indexOfLastCustomer);
+  const totalPages = Math.ceil(filteredCustomers.length / customersPerPage);
+
+  const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
   const renderActiveComponent = () => {
     console.log('Rendering:', activeMenu);
@@ -232,58 +275,110 @@ const Dashboard = ({ onLogout }) => {
               </div>
             </div>
             
-            <div className="recent-transactions">
-              <h2 className="section-heading">Recent Transactions</h2>
-              <table>
-                <thead>
-                  <tr>
-                    <th>Bill No.</th>
-                    <th>Customer</th>
-                    <th>Date</th>
-                    <th>Amount</th>
-                    <th>Status</th>
-                    <th>Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {dashboardData.recentTransactions.map((txn) => (
-                    <tr key={txn.id}>
-                      <td>#{txn.id}</td>
-                      <td>{txn.customer}</td>
-                      <td>{txn.date}</td>
-                      <td>₹{txn.amount.toLocaleString()}</td>
-                      <td>
-                        <span className={`status-badge ${txn.status.toLowerCase()}`}>
-                          {txn.status}
-                        </span>
-                      </td>
-                      <td>
-                        <button className="view-btn">View</button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            
             <div className="customer-overview">
-              <h2 className="section-heading">Customer Overview</h2>
-              <div className="customer-summary">
-                <div className="customer-metric">
-                  <h3 className="metric-heading">Total Customers</h3>
-                  <p>{dashboardData.totalCustomers}</p>
+              <div className="section-header">
+                <h2 className="section-heading">Customer List</h2>
+                <button className="filter-btn" onClick={toggleCustomerFilter}>
+                  🔍 Filter
+                </button>
+              </div>
+              
+              {showCustomerFilter && (
+                <div className="filter-popup">
+                  <button className="close-filter-btn" onClick={toggleCustomerFilter}>
+                    ✕
+                  </button>
+                  <div className="filter-group">
+                    <label>Invoice Number</label>
+                    <input 
+                      type="text" 
+                      placeholder="Search by invoice no."
+                      value={filterInvoiceNo}
+                      onChange={(e) => setFilterInvoiceNo(e.target.value)}
+                    />
+                  </div>
+                  <div className="filter-group">
+                    <label>Customer Name</label>
+                    <input 
+                      type="text" 
+                      placeholder="Search by name"
+                      value={filterCustomerName}
+                      onChange={(e) => setFilterCustomerName(e.target.value)}
+                    />
+                  </div>
+                  <div className="filter-actions">
+                    <button className="apply-btn" onClick={handleFilterApply}>
+                      Apply
+                    </button>
+                    <button className="reset-btn" onClick={handleFilterReset}>
+                      Reset
+                    </button>
+                  </div>
                 </div>
-                <div className="top-customers">
-                  <h3 className="metric-heading">Top Customers</h3>
-                  <ul>
-                    {dashboardData.topCustomers.map((customer, index) => (
-                      <li key={index}>
-                        <span>{customer.name}</span>
-                        <span>₹{customer.amount.toLocaleString()}</span>
-                      </li>
+              )}
+              
+              <div className="customer-table-container">
+                <table className="customer-table">
+                  <thead>
+                    <tr>
+                      <th>Invoice No</th>
+                      <th>Name</th>
+                      <th>Phone</th>
+                      <th>Email</th>
+                      <th>Total Purchases</th>
+                      <th>Last Purchase</th>
+                      <th>Invoice</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {currentCustomers.map((customer) => (
+                      <tr key={customer.id}>
+                        <td>#{customer.id}</td>
+                        <td>{customer.name}</td>
+                        <td>{customer.phone}</td>
+                        <td>{customer.email}</td>
+                        <td>₹{customer.totalPurchases.toLocaleString()}</td>
+                        <td>{customer.lastPurchase}</td>
+                        <td>
+                          <button className="view-btn">View</button>
+                          <button className="edit-btn">Edit</button>
+                        </td>
+                      </tr>
                     ))}
-                  </ul>
-                </div>
+                  </tbody>
+                </table>
+                
+                {filteredCustomers.length === 0 && (
+                  <div className="no-results">
+                    No customers found matching your criteria.
+                  </div>
+                )}
+              </div>
+              
+              <div className="pagination">
+                <button 
+                  onClick={() => paginate(currentPage - 1)} 
+                  disabled={currentPage === 1}
+                >
+                  Previous
+                </button>
+                
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map(number => (
+                  <button 
+                    key={number} 
+                    onClick={() => paginate(number)}
+                    className={currentPage === number ? 'active' : ''}
+                  >
+                    {number}
+                  </button>
+                ))}
+                
+                <button 
+                  onClick={() => paginate(currentPage + 1)} 
+                  disabled={currentPage === totalPages || totalPages === 0}
+                >
+                  Next
+                </button>
               </div>
             </div>
           </>
@@ -355,6 +450,9 @@ const Dashboard = ({ onLogout }) => {
             <i className="icon"></i> <span>Available Stock</span>
           </li>
         </ul>
+        <button className="logout-btn" onClick={handleLogoutClick}>
+          Logout
+        </button>
         
         <div className="sidebar-footer">
           <p>Jewellery Billing v1.0</p>
@@ -371,11 +469,9 @@ const Dashboard = ({ onLogout }) => {
               <button className="mode-toggle" onClick={toggleDarkMode}>
                 {darkMode ? '☀️ Light Mode' : '🌙 Dark Mode'}
               </button>
-              <button className="logout-btn" onClick={handleLogoutClick}>
-                Logout
-              </button>
+             
               <div className="user-profile">
-                <span>Admin</span>
+                <span></span>
                 <div className="avatar">👤</div>
               </div>
             </div>
