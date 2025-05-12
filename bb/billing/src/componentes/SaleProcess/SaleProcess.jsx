@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import '../SaleProcess/SaleProcess.css';
 
 const StartSale = ({ goldRate, silverRate }) => {
@@ -6,26 +6,13 @@ const StartSale = ({ goldRate, silverRate }) => {
   const [customer, setCustomer] = useState({
     name: '',
     phone: '',
-    gstin: '',
+    address: '',
+    email: '',
     isNew: false
   });
 
   // Product cart state
-  const [cart, setCart] = useState([
-    {
-      id: 1,
-      productName: '',
-      metalType: 'Gold',
-      purity: '22K',
-      weight: '',
-      ratePerGram: goldRate * 0.916, // Default 22K gold rate
-      makingCharge: '',
-      makingType: 'percentage',
-      gst: 3,
-      quantity: 1,
-      totalPrice: 0
-    }
-  ]);
+  const [cart, setCart] = useState([]);
 
   // Summary state
   const [summary, setSummary] = useState({
@@ -37,14 +24,60 @@ const StartSale = ({ goldRate, silverRate }) => {
     finalTotal: 0,
     amountPaid: 0,
     balanceDue: 0,
-    paymentMode: 'Cash'
+    paymentMode: 'Cash',
+    advancePayment: 0,
+    deliveryDate: '',
+    invoiceDate: new Date().toISOString().split('T')[0], // Current date as default
+    invoiceMonth: new Date().toLocaleString('default', { month: 'long' }) // Current month as default
   });
+
+  // Product form state
+  const [productForm, setProductForm] = useState({
+    barcode: '',
+    productId: '',
+    productName: '',
+    metalType: 'Gold',
+    purity: '22K',
+    weight: '',
+    currentRate: goldRate,
+    makingCharge: '',
+    gst: 3,
+    totalPrice: 0
+  });
+  const barcodeInputRef = useRef(null);
 
   // Sample product database (in real app, fetch from API)
   const [products] = useState([
-    { id: 1, name: "Gold Chain 22K", metalType: "Gold", purity: "22K", weight: 8.5, makingCharge: 15, makingType: "percentage" },
-    { id: 2, name: "Gold Ring 18K", metalType: "Gold", purity: "18K", weight: 3.2, makingCharge: 1200, makingType: "fixed" },
-    { id: 3, name: "Silver Bracelet", metalType: "Silver", purity: "92.5 Sterling Silver", weight: 25, makingCharge: 10, makingType: "percentage" }
+    { 
+      id: 1, 
+      name: "Gold Chain 22K", 
+      metalType: "Gold", 
+      purity: "22K", 
+      weight: 8.5, 
+      makingCharge: 15, 
+      barcode: "8901234567890",
+      image: "https://example.com/gold-chain.jpg"
+    },
+    { 
+      id: 2, 
+      name: "Gold Ring 18K", 
+      metalType: "Gold", 
+      purity: "18K", 
+      weight: 3.2, 
+      makingCharge: 1200, 
+      barcode: "8901234567891",
+      image: "https://example.com/gold-ring.jpg"
+    },
+    { 
+      id: 3, 
+      name: "Silver Bracelet", 
+      metalType: "Silver", 
+      purity: "92.5 Sterling Silver", 
+      weight: 25, 
+      makingCharge: 10, 
+      barcode: "8901234567892",
+      image: "https://example.com/silver-bracelet.jpg"
+    }
   ]);
 
   // Calculate totals whenever cart changes
@@ -52,51 +85,74 @@ const StartSale = ({ goldRate, silverRate }) => {
     calculateTotals();
   }, [cart, summary.discount, summary.discountType, summary.amountPaid]);
 
+  // Focus barcode input on component mount
+  useEffect(() => {
+    if (barcodeInputRef.current) {
+      barcodeInputRef.current.focus();
+    }
+  }, []);
+
   const handleCustomerChange = (e) => {
     const { name, value } = e.target;
     setCustomer(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleProductChange = (id, field, value) => {
-    setCart(prev => prev.map(item => {
-      if (item.id === id) {
-        const updatedItem = { ...item, [field]: value };
-        
-        // Recalculate price if dependent fields change
-        if (['metalType', 'purity', 'weight', 'ratePerGram', 'makingCharge', 'makingType', 'gst', 'quantity'].includes(field)) {
-          updatedItem.totalPrice = calculateItemPrice(updatedItem);
-        }
-        
-        return updatedItem;
+  const handleProductFormChange = (e) => {
+    const { name, value } = e.target;
+    
+    setProductForm(prev => {
+      const updatedForm = { 
+        ...prev, 
+        [name]: value,
+        // Update current rate when metal type changes
+        currentRate: name === 'metalType' ? 
+          (value === 'Gold' ? goldRate : silverRate) : 
+          prev.currentRate
+      };
+      
+      // Recalculate price when relevant fields change
+      if (['metalType', 'purity', 'weight', 'currentRate', 'makingCharge'].includes(name)) {
+        updatedForm.totalPrice = calculateProductPrice(updatedForm);
       }
-      return item;
-    }));
+      
+      return updatedForm;
+    });
   };
 
-  const calculateItemPrice = (item) => {
-    if (!item.weight || isNaN(item.weight)) return 0;
+  const calculateProductPrice = (product) => {
+    if (!product.weight || isNaN(product.weight)) return 0;
 
-    // Calculate metal value
-    const metalValue = item.weight * item.ratePerGram;
+    // Calculate metal value based on purity
+    let ratePerGram = product.currentRate;
+    if (product.metalType === 'Gold') {
+      if (product.purity === '22K') ratePerGram = product.currentRate * 0.916;
+      else if (product.purity === '18K') ratePerGram = product.currentRate * 0.75;
+    } else { // Silver
+      if (product.purity === '92.5 Sterling Silver') ratePerGram = product.currentRate * 0.925;
+    }
+    
+    const metalValue = product.weight * ratePerGram;
 
-    // Calculate making charges
+    // Calculate making charges (percentage or fixed)
     let makingCharges = 0;
-    if (item.makingCharge && !isNaN(item.makingCharge)) {
-      makingCharges = item.makingType === 'percentage' 
-        ? metalValue * (item.makingCharge / 100)
-        : parseFloat(item.makingCharge);
+    if (product.makingCharge && !isNaN(product.makingCharge)) {
+      if (product.makingCharge > 100) {
+        // Assume it's a fixed amount if making charge is > 100
+        makingCharges = parseFloat(product.makingCharge);
+      } else {
+        // Percentage based making charge
+        makingCharges = metalValue * (product.makingCharge / 100);
+      }
     }
 
     // Calculate subtotal
     const subtotal = metalValue + makingCharges;
 
-    // Calculate GST
-    const gstAmount = subtotal * (item.gst / 100);
+    // Calculate GST (fixed 3%)
+    const gstAmount = subtotal * (product.gst / 100);
 
     // Calculate final price
-    const finalPrice = subtotal + gstAmount;
-
-    return finalPrice * item.quantity;
+    return subtotal + gstAmount;
   };
 
   const calculateTotals = () => {
@@ -107,7 +163,7 @@ const StartSale = ({ goldRate, silverRate }) => {
       ? subtotal * (summary.discount / 100)
       : parseFloat(summary.discount);
 
-    const gstAmount = subtotal * 0.03; // Assuming 3% GST
+    const gstAmount = subtotal * 0.03;
     const total = subtotal + gstAmount;
     const finalTotal = total - discountAmount;
     const balanceDue = finalTotal - summary.amountPaid;
@@ -122,78 +178,216 @@ const StartSale = ({ goldRate, silverRate }) => {
     }));
   };
 
-  const addProductRow = () => {
-    const newId = cart.length > 0 ? Math.max(...cart.map(item => item.id)) + 1 : 1;
-    setCart(prev => [
-      ...prev,
-      {
-        id: newId,
-        productName: '',
-        metalType: 'Gold',
-        purity: '22K',
-        weight: '',
-        ratePerGram: goldRate * 0.916,
-        makingCharge: '',
-        makingType: 'percentage',
-        gst: 3,
-        quantity: 1,
-        totalPrice: 0
+  const handleBarcodeScan = () => {
+    if (productForm.barcode) {
+      const scannedProduct = products.find(p => p.barcode === productForm.barcode);
+      
+      if (scannedProduct) {
+        // Auto-fill the form with product details from inventory
+        setProductForm({
+          barcode: scannedProduct.barcode,
+          productId: scannedProduct.id,
+          productName: scannedProduct.name,
+          metalType: scannedProduct.metalType,
+          purity: scannedProduct.purity,
+          weight: scannedProduct.weight,
+          currentRate: scannedProduct.metalType === 'Gold' ? goldRate : silverRate,
+          makingCharge: scannedProduct.makingCharge,
+          gst: 3,
+          totalPrice: 0
+        });
+        
+        // Recalculate price after auto-fill
+        setTimeout(() => {
+          setProductForm(prev => ({
+            ...prev,
+            totalPrice: calculateProductPrice(prev)
+          }));
+        }, 0);
+      } else {
+        alert('Product not found in inventory!');
       }
-    ]);
-  };
-
-  const removeProductRow = (id) => {
-    if (cart.length > 1) {
-      setCart(prev => prev.filter(item => item.id !== id));
     }
   };
 
-  const handleSummaryChange = (field, value) => {
-    setSummary(prev => ({ ...prev, [field]: value }));
+  const addProductToSale = () => {
+    if (!productForm.barcode || !productForm.productId) {
+      alert('Please scan a valid product barcode!');
+      return;
+    }
+
+    if (!productForm.weight || isNaN(productForm.weight)) {
+      alert('Please enter a valid weight!');
+      return;
+    }
+
+    if (!productForm.makingCharge || isNaN(productForm.makingCharge)) {
+      alert('Please enter valid making charges!');
+      return;
+    }
+
+    const productInCart = cart.find(item => item.productId === productForm.productId);
+    
+    if (productInCart) {
+      alert('This product is already in the sale!');
+      return;
+    }
+
+    const productToAdd = {
+      id: Date.now(), // Unique ID for the sale item
+      productId: productForm.productId,
+      barcode: productForm.barcode,
+      productName: productForm.productName,
+      metalType: productForm.metalType,
+      purity: productForm.purity,
+      weight: parseFloat(productForm.weight),
+      currentRate: parseFloat(productForm.currentRate),
+      makingCharge: parseFloat(productForm.makingCharge),
+      gst: productForm.gst,
+      totalPrice: parseFloat(productForm.totalPrice.toFixed(2)),
+      image: products.find(p => p.id === productForm.productId)?.image || ''
+    };
+
+    setCart(prev => [...prev, productToAdd]);
+    resetProductForm();
   };
 
-  const handleProductSelect = (id, productName) => {
-    const selectedProduct = products.find(p => p.name === productName);
-    if (selectedProduct) {
-      setCart(prev => prev.map(item => {
-        if (item.id === id) {
-          const ratePerGram = selectedProduct.metalType === 'Gold'
-            ? selectedProduct.purity === '24K' ? goldRate
-              : selectedProduct.purity === '22K' ? goldRate * 0.916
-              : goldRate * 0.75
-            : silverRate * 0.925;
-          
-          const updatedItem = {
-            ...item,
-            productName: selectedProduct.name,
-            metalType: selectedProduct.metalType,
-            purity: selectedProduct.purity,
-            weight: selectedProduct.weight,
-            ratePerGram,
-            makingCharge: selectedProduct.makingCharge,
-            makingType: selectedProduct.makingType
-          };
-          
-          updatedItem.totalPrice = calculateItemPrice(updatedItem);
-          return updatedItem;
-        }
-        return item;
-      }));
+  const resetProductForm = () => {
+    setProductForm({
+      barcode: '',
+      productId: '',
+      productName: '',
+      metalType: 'Gold',
+      purity: '22K',
+      weight: '',
+      currentRate: goldRate,
+      makingCharge: '',
+      gst: 3,
+      totalPrice: 0
+    });
+    
+    // Focus back on barcode input after reset
+    if (barcodeInputRef.current) {
+      barcodeInputRef.current.focus();
     }
+  };
+
+  const removeProductFromCart = (id) => {
+    setCart(prev => prev.filter(item => item.id !== id));
+  };
+
+  const handleSummaryChange = (e) => {
+    const { name, value } = e.target;
+    setSummary(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleDateChange = (e) => {
+    const { value } = e.target;
+    setSummary(prev => ({
+      ...prev,
+      invoiceDate: value,
+      // Update month when date changes
+      invoiceMonth: new Date(value).toLocaleString('default', { month: 'long' })
+    }));
+  };
+
+  const handleMonthChange = (e) => {
+    const { value } = e.target;
+    setSummary(prev => ({ ...prev, invoiceMonth: value }));
   };
 
   const generateInvoice = () => {
-    // In a real app, this would generate PDF or send to printer
+    if (cart.length === 0) {
+      alert('Please add at least one product to generate invoice!');
+      return;
+    }
+
+    if (!customer.name) {
+      alert('Please enter customer name!');
+      return;
+    }
+
+    // Prepare invoice data
     const invoiceData = {
-      customer,
-      items: cart,
-      summary,
-      date: new Date().toLocaleString(),
-      invoiceNumber: `INV-${Date.now()}`
+      customer: {
+        ...customer,
+        id: Date.now() // Generate customer ID
+      },
+      items: cart.map(item => ({
+        ...item,
+        // Calculate detailed breakdown for each item
+        metalValue: calculateMetalValue(item),
+        makingCharges: calculateMakingCharges(item),
+        gstAmount: item.totalPrice - (item.totalPrice / (1 + (item.gst / 100)))
+      })),
+      summary: {
+        ...summary,
+        invoiceNumber: `INV-${Date.now()}`,
+        date: summary.invoiceDate,
+        month: summary.invoiceMonth,
+        discountAmount: summary.discountType === 'percentage' 
+          ? summary.subtotal * (summary.discount / 100)
+          : parseFloat(summary.discount)
+      }
     };
-    console.log('Invoice generated:', invoiceData);
+
+    // In a real app, you would send this to your backend or print it
+    console.log('Invoice Data:', invoiceData);
     alert('Invoice generated successfully!');
+    
+    // Reset the form for new sale
+    setCustomer({
+      name: '',
+      phone: '',
+      address: '',
+      email: '',
+      isNew: false
+    });
+    setCart([]);
+    setSummary({
+      subtotal: 0,
+      gstAmount: 0,
+      total: 0,
+      discount: 0,
+      discountType: 'percentage',
+      finalTotal: 0,
+      amountPaid: 0,
+      balanceDue: 0,
+      paymentMode: 'Cash',
+      advancePayment: 0,
+      deliveryDate: '',
+      invoiceDate: new Date().toISOString().split('T')[0], // Reset to current date
+      invoiceMonth: new Date().toLocaleString('default', { month: 'long' }) // Reset to current month
+    });
+    resetProductForm();
   };
+
+  // Helper function to calculate metal value for an item
+  const calculateMetalValue = (item) => {
+    let ratePerGram = item.currentRate;
+    if (item.metalType === 'Gold') {
+      if (item.purity === '22K') ratePerGram = item.currentRate * 0.916;
+      else if (item.purity === '18K') ratePerGram = item.currentRate * 0.75;
+    } else { // Silver
+      if (item.purity === '92.5 Sterling Silver') ratePerGram = item.currentRate * 0.925;
+    }
+    return item.weight * ratePerGram;
+  };
+
+  // Helper function to calculate making charges for an item
+  const calculateMakingCharges = (item) => {
+    const metalValue = calculateMetalValue(item);
+    if (item.makingCharge > 100) {
+      return parseFloat(item.makingCharge);
+    }
+    return metalValue * (item.makingCharge / 100);
+  };
+
+  // Get list of months for dropdown
+  const months = [
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December'
+  ];
 
   return (
     <div className="start-sale-container">
@@ -221,161 +415,272 @@ const StartSale = ({ goldRate, silverRate }) => {
             />
           </div>
           <div className="form-group">
-            <label>GSTIN</label>
+            <label>Address</label>
             <input
               type="text"
-              name="gstin"
-              value={customer.gstin}
+              name="address"
+              value={customer.address}
               onChange={handleCustomerChange}
             />
           </div>
           <div className="form-group">
-            <label>
-              <input
-                type="checkbox"
-                checked={customer.isNew}
-                onChange={() => setCustomer(prev => ({ ...prev, isNew: !prev.isNew }))}
-              />
-              New Customer
-            </label>
+            <label>Email (Optional)</label>
+            <input
+              type="email"
+              name="email"
+              value={customer.email}
+              onChange={handleCustomerChange}
+            />
           </div>
         </div>
       </div>
 
-      {/* Product Selection Table */}
+      {/* Product Section */}
       <div className="product-section">
-        <h3>Products</h3>
-        <table className="product-table">
-          <thead>
-            <tr>
-              <th>Product</th>
-              <th>Metal</th>
-              <th>Purity</th>
-              <th>Weight (g)</th>
-              <th>Rate/g</th>
-              <th>Making</th>
-              <th>GST %</th>
-              <th>Qty</th>
-              <th>Total</th>
-              <th>Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {cart.map(item => (
-              <tr key={item.id}>
-                <td>
-                  <select
-                    value={item.productName}
-                    onChange={(e) => {
-                      handleProductSelect(item.id, e.target.value);
-                      handleProductChange(item.id, 'productName', e.target.value);
-                    }}
-                  >
-                    <option value="">Select Product</option>
-                    {products.map(product => (
-                      <option key={product.id} value={product.name}>{product.name}</option>
-                    ))}
-                  </select>
-                </td>
-                <td>
-                  <select
-                    value={item.metalType}
-                    onChange={(e) => handleProductChange(item.id, 'metalType', e.target.value)}
-                  >
-                    <option value="Gold">Gold</option>
-                    <option value="Silver">Silver</option>
-                  </select>
-                </td>
-                <td>
-                  <select
-                    value={item.purity}
-                    onChange={(e) => handleProductChange(item.id, 'purity', e.target.value)}
-                  >
-                    {item.metalType === 'Gold' ? (
-                      <>
-                        <option value="24K">24K</option>
-                        <option value="22K">22K</option>
-                        <option value="18K">18K</option>
-                      </>
-                    ) : (
-                      <>
-                        <option value="99.9">99.9%</option>
-                        <option value="92.5 Sterling Silver">92.5%</option>
-                      </>
-                    )}
-                  </select>
-                </td>
-                <td>
+        <h3>Sale Products</h3>
+        
+        {/* Products List */}
+        <div className="products-list">
+          {cart.length === 0 ? (
+            <div className="empty-cart">
+              <p>No products added to sale yet. Scan product barcode below.</p>
+            </div>
+          ) : (
+            <table className="product-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Product</th>
+                  <th>Barcode</th>
+                  <th>Metal</th>
+                  <th>Purity</th>
+                  <th>Weight (g)</th>
+                  <th>Rate/g</th>
+                  <th>Making</th>
+                  <th>GST</th>
+                  <th>Total</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {cart.map((item, index) => (
+                  <tr key={item.id}>
+                    <td>{index + 1}</td>
+                    <td>{item.productName}</td>
+                    <td>{item.barcode}</td>
+                    <td>{item.metalType}</td>
+                    <td>{item.purity}</td>
+                    <td>{item.weight.toFixed(3)}g</td>
+                    <td>₹{item.currentRate.toFixed(2)}</td>
+                    <td>
+                      {item.makingCharge > 100 
+                        ? `₹${item.makingCharge.toFixed(2)}` 
+                        : `${item.makingCharge}%`}
+                    </td>
+                    <td>{item.gst}%</td>
+                    <td>₹{item.totalPrice.toFixed(2)}</td>
+                    <td>
+                      <button 
+                        className="remove-btn"
+                        onClick={() => removeProductFromCart(item.id)}
+                      >
+                        🗑
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+        
+        <div className="product-actions">
+          <span className="product-count">{cart.length} items in sale</span>
+        </div>
+
+        {/* Product Sale Form */}
+        <div className="add-product-form">
+          <h4>Scan Product</h4>
+          
+          <div className="form-row">
+            <div className="form-group">
+              <label>Barcode*</label>
+              <div className="barcode-input-group">
+                <input
+                  type="text"
+                  name="barcode"
+                  value={productForm.barcode}
+                  onChange={handleProductFormChange}
+                  ref={barcodeInputRef}
+                  placeholder="Scan product barcode"
+                  required
+                />
+                <button 
+                  className="scan-btn"
+                  onClick={handleBarcodeScan}
+                >
+                  🔍 Find Product
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          {/* Show all product fields after scanning */}
+          {productForm.productId && (
+            <>
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Product Name</label>
+                  <input
+                    type="text"
+                    name="productName"
+                    value={productForm.productName}
+                    readOnly
+                  />
+                </div>
+                
+                <div className="form-group">
+                  <label>Metal Type</label>
+                  <input
+                    type="text"
+                    name="metalType"
+                    value={productForm.metalType}
+                    readOnly
+                  />
+                </div>
+              </div>
+              
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Purity</label>
+                  <input
+                    type="text"
+                    name="purity"
+                    value={productForm.purity}
+                    readOnly
+                  />
+                </div>
+                
+                <div className="form-group">
+                  <label>Weight (g)</label>
                   <input
                     type="number"
-                    value={item.weight}
-                    onChange={(e) => handleProductChange(item.id, 'weight', e.target.value)}
+                    name="weight"
+                    value={productForm.weight}
+                    onChange={handleProductFormChange}
+                    step="0.001"
+                    min="0"
+                    required
+                  />
+                </div>
+              </div>
+              
+              <div className="form-row">
+                <div className="form-group">
+                  <label>Current Rate (₹/g)*</label>
+                  <input
+                    type="number"
+                    name="currentRate"
+                    value={productForm.currentRate}
+                    onChange={handleProductFormChange}
                     step="0.01"
                     min="0"
+                    required
                   />
-                </td>
-                <td>
-                  ₹{item.ratePerGram.toFixed(2)}
-                </td>
-                <td>
-                  <div className="making-charge-group">
-                    <input
-                      type="number"
-                      value={item.makingCharge}
-                      onChange={(e) => handleProductChange(item.id, 'makingCharge', e.target.value)}
-                      step="0.01"
-                      min="0"
-                    />
-                    <select
-                      value={item.makingType}
-                      onChange={(e) => handleProductChange(item.id, 'makingType', e.target.value)}
-                    >
-                      <option value="percentage">%</option>
-                      <option value="fixed">₹</option>
-                    </select>
-                  </div>
-                </td>
-                <td>
+                  <small>
+                    {productForm.metalType === 'Gold' ? 
+                      `24K Gold Rate: ₹${goldRate.toFixed(2)}/g` : 
+                      `99.9% Silver Rate: ₹${silverRate.toFixed(2)}/g`}
+                  </small>
+                </div>
+                
+                <div className="form-group">
+                  <label>Making Charge*</label>
                   <input
                     type="number"
-                    value={item.gst}
-                    onChange={(e) => handleProductChange(item.id, 'gst', e.target.value)}
+                    name="makingCharge"
+                    value={productForm.makingCharge}
+                    onChange={handleProductFormChange}
+                    step="0.01"
                     min="0"
-                    max="28"
-                    step="0.1"
+                    required
                   />
-                </td>
-                <td>
+                  <small>
+                    {productForm.makingCharge > 100 ? 
+                      "Fixed amount (₹)" : "Percentage (%)"}
+                  </small>
+                </div>
+              </div>
+              
+              <div className="form-row">
+                <div className="form-group">
+                  <label>GST (%)</label>
                   <input
                     type="number"
-                    value={item.quantity}
-                    onChange={(e) => handleProductChange(item.id, 'quantity', e.target.value)}
-                    min="1"
+                    name="gst"
+                    value={productForm.gst}
+                    readOnly
                   />
-                </td>
-                <td>₹{item.totalPrice.toFixed(2)}</td>
-                <td>
-                  {cart.length > 1 && (
-                    <button 
-                      className="remove-btn"
-                      onClick={() => removeProductRow(item.id)}
-                    >
-                      🗑️
-                    </button>
-                  )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-        <button className="add-product-btn" onClick={addProductRow}>
-          ➕ Add Another Product
-        </button>
+                </div>
+                
+                <div className="form-group">
+                  <label>Calculated Price</label>
+                  <input
+                    type="text"
+                    value={`₹${productForm.totalPrice.toFixed(2)}`}
+                    readOnly
+                  />
+                </div>
+              </div>
+              
+              <div className="form-actions">
+                <button 
+                  className="cancel-btn"
+                  onClick={resetProductForm}
+                >
+                  Clear
+                </button>
+                <button 
+                  className="save-btn" 
+                  onClick={addProductToSale}
+                >
+                  Add to Sale
+                </button>
+              </div>
+            </>
+          )}
+        </div>
       </div>
 
       {/* Summary Sidebar */}
       <div className="summary-sidebar">
         <h3>Invoice Summary</h3>
+        
+        {/* Invoice Date and Month Fields */}
+        <div className="form-row">
+          <div className="form-group">
+            <label>Invoice Date</label>
+            <input
+              type="date"
+              name="invoiceDate"
+              value={summary.invoiceDate}
+              onChange={handleDateChange}
+            />
+          </div>
+          <div className="form-group">
+            <label>Month</label>
+            <select
+              name="invoiceMonth"
+              value={summary.invoiceMonth}
+              onChange={handleMonthChange}
+            >
+              {months.map(month => (
+                <option key={month} value={month}>{month}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+        
         <div className="summary-details">
           <div className="summary-row">
             <span>Subtotal:</span>
@@ -394,14 +699,16 @@ const StartSale = ({ goldRate, silverRate }) => {
               <span>Discount:</span>
               <input
                 type="number"
+                name="discount"
                 value={summary.discount}
-                onChange={(e) => handleSummaryChange('discount', e.target.value)}
+                onChange={handleSummaryChange}
                 min="0"
                 step="0.01"
               />
               <select
+                name="discountType"
                 value={summary.discountType}
-                onChange={(e) => handleSummaryChange('discountType', e.target.value)}
+                onChange={handleSummaryChange}
               >
                 <option value="percentage">%</option>
                 <option value="fixed">₹</option>
@@ -421,8 +728,9 @@ const StartSale = ({ goldRate, silverRate }) => {
             <span>Amount Paid:</span>
             <input
               type="number"
+              name="amountPaid"
               value={summary.amountPaid}
-              onChange={(e) => handleSummaryChange('amountPaid', e.target.value)}
+              onChange={handleSummaryChange}
               min="0"
               step="1"
             />
@@ -436,8 +744,9 @@ const StartSale = ({ goldRate, silverRate }) => {
           <div className="form-group">
             <label>Payment Mode:</label>
             <select
+              name="paymentMode"
               value={summary.paymentMode}
-              onChange={(e) => handleSummaryChange('paymentMode', e.target.value)}
+              onChange={handleSummaryChange}
             >
               <option value="Cash">Cash</option>
               <option value="Card">Card</option>
@@ -449,17 +758,12 @@ const StartSale = ({ goldRate, silverRate }) => {
 
         {/* Action Buttons */}
         <div className="action-buttons">
-          <button className="invoice-btn" onClick={generateInvoice}>
-            🖨️ Generate Invoice
-          </button>
-          <button className="whatsapp-btn">
-            📤 Send to WhatsApp
-          </button>
-          <button className="save-btn">
-            💾 Save & Print
-          </button>
-          <button className="new-sale-btn">
-            🔁 New Sale
+          <button 
+            className="invoice-btn" 
+            onClick={generateInvoice}
+            disabled={cart.length === 0 || !customer.name}
+          >
+            🖨 Generate Invoice
           </button>
         </div>
       </div>

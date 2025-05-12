@@ -222,6 +222,8 @@ body {
   justify-content: center;
   align-items: center;
   height: 40px;
+ 
+  margin-top: 21px;
   background: #f5f5f5;
   border-radius: 5px;
   font-size: 20px;

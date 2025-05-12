@@ -5,6 +5,19 @@ import RegisteredProducts from '../RegisteredProduct/RegisteredProducts';
 import StartSale from '../SaleProcess/SaleProcess';
 import SalesHistory from '../SalesHistory/SalesHistory';
 
+// Import icons from react-icons library
+import { 
+  FiHome, FiPackage, FiShoppingCart, FiList, FiDollarSign, FiPieChart,
+  FiAlertTriangle, FiUsers, FiLogOut, FiSun, FiMoon, FiEdit, FiFilter,
+  FiPrinter, FiTrendingUp, FiAlertCircle, FiClock, FiCalendar, FiFileText
+} from 'react-icons/fi';
+import { 
+  FaRupeeSign, FaCoins, FaGem, FaRing, FaChartLine, 
+  FaExclamationTriangle, FaMoneyBillWave, FaBoxes, FaWeightHanging,
+  FaPercentage, FaReceipt, FaUserTie, FaSearchDollar, FaFileInvoiceDollar,
+  FaChartBar, FaWarehouse
+} from 'react-icons/fa';
+
 const Dashboard = ({ onLogout }) => {
   const [darkMode, setDarkMode] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -132,10 +145,12 @@ const Dashboard = ({ onLogout }) => {
           <>
             <div className="rates-container">
               <div className="rates-header">
-                <h2 className="section-heading">Today's Rates</h2>
+                <h2 className="section-heading">
+                  <FaCoins className="section-icon" /> Today's Rates
+                </h2>
                 {isAdmin && !editingRates && (
                   <button className="edit-rates-btn" onClick={handleEditRates}>
-                    ✏️ Edit
+                    <FiEdit /> Edit
                   </button>
                 )}
               </div>
@@ -143,9 +158,9 @@ const Dashboard = ({ onLogout }) => {
               {editingRates ? (
                 <div className="rates-edit-form">
                   <div className="rate-input-group">
-                    <label>Gold Rate (per gram)</label>
+                    <label><FaGem /> Gold Rate (per gram)</label>
                     <div className="input-with-symbol">
-                      <span>₹</span>
+                      <span><FaRupeeSign /></span>
                       <input 
                         type="number" 
                         value={tempGoldRate} 
@@ -155,9 +170,9 @@ const Dashboard = ({ onLogout }) => {
                   </div>
                   
                   <div className="rate-input-group">
-                    <label>Silver Rate (per gram)</label>
+                    <label><FaRing /> Silver Rate (per gram)</label>
                     <div className="input-with-symbol">
-                      <span>₹</span>
+                      <span><FaRupeeSign /></span>
                       <input 
                         type="number" 
                         step="0.01"
@@ -179,23 +194,27 @@ const Dashboard = ({ onLogout }) => {
               ) : (
                 <div className="rates-display">
                   <div className="rate-card gold-rate">
-                    <div className="rate-icon">📈</div>
+                    <div className="rate-icon">
+                      <FaGem size={28} />
+                    </div>
                     <div className="rate-content">
                       <h3>Gold Rate (per gram)</h3>
-                      <p className="rate-value">₹{goldRate.toLocaleString()}</p>
+                      <p className="rate-value"><FaRupeeSign /> {goldRate.toLocaleString()}</p>
                     </div>
                   </div>
                   
                   <div className="rate-card silver-rate">
-                    <div className="rate-icon">🪙</div>
+                    <div className="rate-icon">
+                      <FaRing size={28} />
+                    </div>
                     <div className="rate-content">
                       <h3>Silver Rate (per gram)</h3>
-                      <p className="rate-value">₹{silverRate.toLocaleString()}</p>
+                      <p className="rate-value"><FaRupeeSign /> {silverRate.toLocaleString()}</p>
                     </div>
                   </div>
                   
                   <div className="rates-footer">
-                    <p>Last updated: {lastUpdated}</p>
+                    <p><FiClock /> Last updated: {lastUpdated}</p>
                   </div>
                 </div>
               )}
@@ -203,31 +222,39 @@ const Dashboard = ({ onLogout }) => {
             
             <div className="summary-cards">
               <div className="card">
-                <div className="card-icon gold-bg">💰</div>
+                <div className="card-icon gold-bg">
+                  <FaMoneyBillWave size={24} />
+                </div>
                 <div className="card-content">
                   <h3 className="card-heading">Today's Sales</h3>
-                  <p>₹{dashboardData.todaySales.toLocaleString()}</p>
+                  <p><FaRupeeSign /> {dashboardData.todaySales.toLocaleString()}</p>
                 </div>
               </div>
               
               <div className="card">
-                <div className="card-icon silver-bg">📅</div>
+                <div className="card-icon silver-bg">
+                  <FaChartLine size={24} />
+                </div>
                 <div className="card-content">
                   <h3 className="card-heading">Monthly Revenue</h3>
-                  <p>₹{dashboardData.monthlyRevenue.toLocaleString()}</p>
+                  <p><FaRupeeSign /> {dashboardData.monthlyRevenue.toLocaleString()}</p>
                 </div>
               </div>
               
               <div className="card">
-                <div className="card-icon gold-bg">⏳</div>
+                <div className="card-icon gold-bg">
+                  <FaSearchDollar size={24} />
+                </div>
                 <div className="card-content">
                   <h3 className="card-heading">Pending Payments</h3>
-                  <p>₹{dashboardData.pendingPayments.toLocaleString()}</p>
+                  <p><FaRupeeSign /> {dashboardData.pendingPayments.toLocaleString()}</p>
                 </div>
               </div>
               
               <div className="card">
-                <div className="card-icon silver-bg">⚠️</div>
+                <div className="card-icon silver-bg">
+                  <FaExclamationTriangle size={24} />
+                </div>
                 <div className="card-content">
                   <h3 className="card-heading">Low Stock Items</h3>
                   <p className={dashboardData.lowStockItems > 0 ? 'warning' : ''}>
@@ -239,7 +266,9 @@ const Dashboard = ({ onLogout }) => {
             
             <div className="row">
               <div className="col chart-container">
-                <h2 className="section-heading">Sales Overview</h2>
+                <h2 className="section-heading">
+                  <FiPieChart className="section-icon" /> Sales Overview
+                </h2>
                 <div className="sales-chart">
                   <div className="chart-bars">
                     {dashboardData.salesData.values.map((value, index) => (
@@ -257,18 +286,20 @@ const Dashboard = ({ onLogout }) => {
               </div>
               
               <div className="col stock-overview">
-                <h2 className="section-heading">Stock Overview</h2>
+                <h2 className="section-heading">
+                  <FaExclamationTriangle className="section-icon" /> Low-Stock Alerts
+                </h2>
                 <div className="stock-summary">
                   <div className="stock-metric">
-                    <h3 className="metric-heading">Total Items</h3>
+                    <h3 className="metric-heading"><FaBoxes /> Total Items</h3>
                     <p>{dashboardData.totalItems}</p>
                   </div>
                   <div className="stock-metric">
-                    <h3 className="metric-heading">Low Stock</h3>
+                    <h3 className="metric-heading"><FaExclamationTriangle /> Low Stock</h3>
                     <p className="warning">{dashboardData.lowStockItems}</p>
                   </div>
                   <div className="stock-metric">
-                    <h3 className="metric-heading">Top Sellers</h3>
+                    <h3 className="metric-heading"><FaGem /> Top Sellers</h3>
                     <p>Gold Chains</p>
                   </div>
                 </div>
@@ -277,9 +308,11 @@ const Dashboard = ({ onLogout }) => {
             
             <div className="customer-overview">
               <div className="section-header">
-                <h2 className="section-heading">Customer List</h2>
+                <h2 className="section-heading">
+                  <FaUserTie className="section-icon" /> Customer List
+                </h2>
                 <button className="filter-btn" onClick={toggleCustomerFilter}>
-                  🔍 Filter
+                  <FiFilter /> Filter
                 </button>
               </div>
               
@@ -337,7 +370,7 @@ const Dashboard = ({ onLogout }) => {
                         <td>{customer.name}</td>
                         <td>{customer.phone}</td>
                         <td>{customer.email}</td>
-                        <td>₹{customer.totalPurchases.toLocaleString()}</td>
+                        <td><FaRupeeSign /> {customer.totalPurchases.toLocaleString()}</td>
                         <td>{customer.lastPurchase}</td>
                         <td>
                           <button className="view-btn">View</button>
@@ -391,6 +424,27 @@ const Dashboard = ({ onLogout }) => {
         return <RegisteredProducts />;
       case 'Sales History':
         return <SalesHistory />;
+      case 'Invoices':
+        return (
+          <div className="coming-soon">
+            <h2><FaFileInvoiceDollar /> Invoices</h2>
+            <p>This feature is coming soon!</p>
+          </div>
+        );
+      case 'Sales Overview':
+        return (
+          <div className="coming-soon">
+            <h2><FaChartBar /> Sales Overview</h2>
+            <p>This feature is coming soon!</p>
+          </div>
+        );
+      case 'Stock Alert':
+        return (
+          <div className="coming-soon">
+            <h2><FaWarehouse /> Stock Alert</h2>
+            <p>This feature is coming soon!</p>
+          </div>
+        );
       default:
         return (
           <div className="coming-soon">
@@ -417,41 +471,35 @@ const Dashboard = ({ onLogout }) => {
             className={activeMenu === 'Dashboard' ? 'active' : ''}
             onClick={() => handleMenuClick('Dashboard')}
           >
-            <i className="icon"></i> <span>Dashboard</span>
+            <FiHome className="menu-icon" /> <span> Dashboard</span>
           </li>
           <li 
             className={activeMenu === 'Product Registration' ? 'active' : ''}
             onClick={() => handleMenuClick('Product Registration')}
           >
-            <i className="icon"></i> <span>Product Registration</span>
+            <FiPackage className="menu-icon" /> <span> Product Registration</span>
           </li>
           <li 
             className={activeMenu === 'Start Sale' ? 'active' : ''}
             onClick={() => handleMenuClick('Start Sale')}
           >
-            <i className="icon"></i> <span>Start Sale</span>
+            <FiShoppingCart className="menu-icon" /> <span> Start Sale</span>
           </li>
           <li 
             className={activeMenu === 'Registered Products' ? 'active' : ''}
             onClick={() => handleMenuClick('Registered Products')}
           >
-            <i className="icon"></i> <span>Registered Products</span>
+            <FiList className="menu-icon" /> <span> Registered Products</span>
           </li>
           <li 
             className={activeMenu === 'Sales History' ? 'active' : ''}
             onClick={() => handleMenuClick('Sales History')}
           >
-            <i className="icon"></i> <span>Sales History</span>
-          </li>
-          <li 
-            className={activeMenu === 'Available Stock' ? 'active' : ''}
-            onClick={() => handleMenuClick('Available Stock')}
-          >
-            <i className="icon"></i> <span>Available Stock</span>
+            <FiPrinter className="menu-icon" /> <span> Sales History</span>
           </li>
         </ul>
         <button className="logout-btn" onClick={handleLogoutClick}>
-          Logout
+          <FiLogOut /> Logout
         </button>
         
         <div className="sidebar-footer">
@@ -463,11 +511,37 @@ const Dashboard = ({ onLogout }) => {
       <div className="main-content-wrapper">
         {/* Fixed Header */}
         <header className="main-header fixed-header">
-          <h1 className="main-heading">{activeMenu}</h1>
+          <h1 className="main-heading">
+            {activeMenu === 'Invoices' && <FaFileInvoiceDollar className="header-icon" />}
+            {activeMenu === 'Sales Overview' && <FaChartBar className="header-icon" />}
+            {activeMenu === 'Stock Alert' && <FaWarehouse className="header-icon" />}
+            {activeMenu}
+          </h1>
           <div className="header-actions">
+            <div className="header-nav">
+              <button 
+                className={`header-nav-btn ${activeMenu === 'Invoices' ? 'active' : ''}`}
+                onClick={() => handleMenuClick('Invoices')}
+              >
+                <FaFileInvoiceDollar /> Invoices
+              </button>
+              <button 
+                className={`header-nav-btn ${activeMenu === 'Sales Overview' ? 'active' : ''}`}
+                onClick={() => handleMenuClick('Sales Overview')}
+              >
+                <FaChartBar /> Sales Overview
+              </button>
+              <button 
+                className={`header-nav-btn ${activeMenu === 'Stock Alert' ? 'active' : ''}`}
+                onClick={() => handleMenuClick('Stock Alert')}
+              >
+                <FaWarehouse /> Stock Alert
+              </button>
+            </div>
             <div className="header-right">
               <button className="mode-toggle" onClick={toggleDarkMode}>
-                {darkMode ? '☀️ Light Mode' : '🌙 Dark Mode'}
+                {darkMode ? <FiSun /> : <FiMoon />}
+                {darkMode ? ' Light Mode' : ' Dark Mode'}
               </button>
              
               <div className="user-profile">

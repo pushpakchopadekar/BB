@@ -1,293 +1,643 @@
 /* StartSale.css */
 
 .start-sale-container {
-    display: grid;
-    grid-template-columns: 2fr 1fr;
-    gap: 20px;
-    padding: 20px;
-    background-color: #f9f9f9;
-    border-radius: 8px;
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 20px;
+  padding: 20px;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+}
+
+/* Customer Section */
+.customer-section {
+  grid-column: 1 / -1;
+  background-color: white;
+  padding: 15px;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.customer-section h3 {
+  color: #b8860b;
+  margin-top: 0;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 10px;
+}
+
+.customer-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 15px;
+}
+
+.form-group {
+  margin-bottom: 10px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: 500;
+  color: #555;
+}
+
+.form-group input,
+.form-group select {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.form-group input[type="checkbox"] {
+  width: auto;
+  margin-right: 8px;
+}
+
+/* Product Section */
+.product-section {
+  background-color: white;
+  padding: 15px;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.product-section h3 {
+  color: #b8860b;
+  margin-top: 0;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 10px;
+}
+
+/* Scanner Section */
+.scanner-section {
+  margin-bottom: 15px;
+  padding: 10px;
+  background-color: #f5f5f5;
+  border-radius: 4px;
+}
+
+.scanner-btn {
+  background-color: #f0ad4e;
+  color: white;
+  border: none;
+  padding: 8px 15px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  margin-right: 10px;
+}
+
+.scanner-btn.active {
+  background-color: #5cb85c;
+}
+
+.scanner-input {
+  margin-top: 10px;
+}
+
+.scanner-input input {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.scanner-input small {
+  display: block;
+  margin-top: 5px;
+  color: #666;
+  font-size: 0.8em;
+}
+
+/* Scan History */
+.scan-history-panel {
+  margin-bottom: 15px;
+  padding: 10px;
+  background-color: #f8f9fa;
+  border-radius: 4px;
+  border: 1px solid #eee;
+}
+
+.scan-history-panel h4 {
+  margin-top: 0;
+  margin-bottom: 10px;
+  color: #555;
+}
+
+.scan-history-list {
+  max-height: 150px;
+  overflow-y: auto;
+}
+
+.scan-history-item {
+  padding: 5px 8px;
+  margin-bottom: 3px;
+  border-radius: 3px;
+  font-size: 0.85em;
+  display: flex;
+  justify-content: space-between;
+}
+
+.scan-history-item.success {
+  background-color: #e6ffe6;
+  border-left: 3px solid #5cb85c;
+}
+
+.scan-history-item.error {
+  background-color: #ffe6e6;
+  border-left: 3px solid #d9534f;
+}
+
+.scan-time {
+  color: #666;
+  margin-right: 10px;
+}
+
+.scan-barcode {
+  font-family: monospace;
+  margin-right: 10px;
+}
+
+.scan-product {
+  flex-grow: 1;
+  text-align: right;
+}
+
+/* Product Table */
+.product-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 15px;
+}
+
+.product-table th {
+  background-color: #f5f5f5;
+  padding: 10px;
+  text-align: left;
+  font-weight: 500;
+  color: #555;
+}
+
+.product-table td {
+  padding: 10px;
+  border-bottom: 1px solid #eee;
+  vertical-align: middle;
+}
+
+.product-table select,
+.product-table input {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.product-image-cell {
+  width: 60px;
+  padding: 5px !important;
+}
+
+.product-thumbnail {
+  width: 50px;
+  height: 50px;
+  object-fit: contain;
+  border: 1px solid #eee;
+  border-radius: 3px;
+}
+
+.making-charge-group {
+  display: flex;
+}
+
+.making-charge-group input {
+  flex: 1;
+  border-radius: 4px 0 0 4px;
+}
+
+.making-charge-group select {
+  width: 60px;
+  border-radius: 0 4px 4px 0;
+  border-left: none;
+}
+
+.remove-btn {
+  background: none;
+  border: none;
+  color: #d9534f;
+  cursor: pointer;
+  font-size: 16px;
+  padding: 5px;
+}
+
+.remove-btn:disabled {
+  color: #ccc;
+  cursor: not-allowed;
+}
+
+.product-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.add-product-btn {
+  background-color: #b8860b;
+  color: white;
+  border: none;
+  padding: 8px 15px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.add-product-btn:hover {
+  background-color: #a5770a;
+}
+
+.product-count {
+  font-size: 0.9em;
+  color: #666;
+}
+
+/* Summary Sidebar */
+.summary-sidebar {
+  background-color: white;
+  padding: 15px;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  align-self: start;
+}
+
+.summary-sidebar h3 {
+  color: #b8860b;
+  margin-top: 0;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 10px;
+}
+
+.summary-details {
+  margin-bottom: 20px;
+}
+
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  padding: 8px 0;
+  border-bottom: 1px dashed #eee;
+}
+
+.summary-row:last-child {
+  border-bottom: none;
+}
+
+.discount-row {
+  flex-wrap: wrap;
+}
+
+.discount-controls {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.discount-controls input {
+  width: 60px;
+  padding: 5px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.discount-controls select {
+  padding: 5px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.total-row {
+  font-weight: bold;
+  font-size: 1.1em;
+  color: #006400;
+  border-top: 2px solid #eee;
+  margin-top: 10px;
+  padding-top: 10px;
+}
+
+.warning {
+  color: #d9534f;
+}
+
+.action-buttons {
+  display: grid;
+  gap: 10px;
+}
+
+.invoice-btn,
+.whatsapp-btn,
+.save-btn,
+.new-sale-btn {
+  padding: 10px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.invoice-btn {
+  background-color: #5bc0de;
+  color: white;
+}
+
+.whatsapp-btn {
+  background-color: #25D366;
+  color: white;
+}
+
+.save-btn {
+  background-color: #5cb85c;
+  color: white;
+}
+
+.new-sale-btn {
+  background-color: #f0ad4e;
+  color: white;
+}
+
+.invoice-btn:hover,
+.whatsapp-btn:hover,
+.save-btn:hover,
+.new-sale-btn:hover {
+  opacity: 0.9;
+}
+/* Add these styles to your existing CSS file */
+
+/* Barcode Input Group */
+.barcode-input-group {
+  display: flex;
+  gap: 5px;
+}
+
+.barcode-input-group input {
+  flex: 1;
+}
+
+.scan-btn {
+  background-color: #5bc0de;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 12px;
+  cursor: pointer;
+}
+
+/* Price Preview */
+.price-preview {
+  margin: 15px 0;
+  padding: 10px;
+  background-color: #f5f5f5;
+  border-radius: 4px;
+}
+
+.price-row {
+  display: flex;
+  justify-content: space-between;
+  font-weight: bold;
+  font-size: 1.1em;
+}
+
+/* Form Actions */
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.form-actions button {
+  padding: 8px 15px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.form-actions .cancel-btn {
+  background-color: #d9534f;
+  color: white;
+}
+
+.form-actions .save-btn {
+  background-color: #5cb85c;
+  color: white;
+}
+
+/* Add Product Form */
+.add-product-form {
+  background-color: #f8f9fa;
+  padding: 20px;
+  border-radius: 8px;
+  margin-top: 20px;
+  border: 1px solid #eee;
+}
+
+.add-product-form h4 {
+  margin-top: 0;
+  color: #b8860b;
+  border-bottom: 1px solid #ddd;
+  padding-bottom: 10px;
+}
+
+/* Form Row */
+.form-row {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 15px;
+}
+
+.form-row .form-group {
+  flex: 1;
+}
+/* Dark Mode Support */
+.dark-mode .start-sale-container {
+  background-color: #333;
+}
+
+.dark-mode .customer-section,
+.dark-mode .product-section,
+.dark-mode .summary-sidebar {
+  background-color: #444;
+  color: #fff;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+}
+
+.dark-mode .product-table th {
+  background-color: #555;
+  color: #fff;
+}
+
+.dark-mode .form-group input,
+.dark-mode .form-group select,
+.dark-mode .product-table select,
+.dark-mode .product-table input {
+  background-color: #555;
+  color: #fff;
+  border-color: #666;
+}
+
+.dark-mode .summary-row {
+  border-bottom-color: #555;
+}
+
+.dark-mode .total-row {
+  border-top-color: #555;
+  color: #7fff7f;
+}
+
+.dark-mode .warning {
+  color: #ff7f7f;
+}
+
+.dark-mode .scanner-section {
+  background-color: #555;
+}
+
+.dark-mode .scanner-input small {
+  color: #ccc;
+}
+
+.dark-mode .scan-history-panel {
+  background-color: #555;
+  border-color: #666;
+}
+
+.dark-mode .scan-history-item.success {
+  background-color: #334d33;
+  border-left-color: #5cb85c;
+}
+
+.dark-mode .scan-history-item.error {
+  background-color: #4d3333;
+  border-left-color: #d9534f;
+}
+
+.dark-mode .product-count {
+  color: #aaa;
+}
+
+
+/* Add Product Form Styles */
+.add-product-form {
+  background-color: #f8f9fa;
+  padding: 20px;
+  border-radius: 8px;
+  margin-top: 20px;
+  border: 1px solid #eee;
+}
+
+.add-product-form h4 {
+  margin-top: 0;
+  color: #b8860b;
+  border-bottom: 1px solid #ddd;
+  padding-bottom: 10px;
+}
+
+.form-row {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 15px;
+}
+
+.form-row .form-group {
+  flex: 1;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.form-actions button {
+  padding: 8px 15px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.form-actions .cancel-btn {
+  background-color: #f0ad4e;
+  color: white;
+}
+
+.form-actions .save-btn {
+  background-color: #5cb85c;
+  color: white;
+}
+
+/* Product Table Styles */
+.product-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 15px;
+}
+
+.product-table th {
+  background-color: #f5f5f5;
+  padding: 10px;
+  text-align: left;
+  font-weight: 500;
+  color: #555;
+}
+
+.product-table td {
+  padding: 10px;
+  border-bottom: 1px solid #eee;
+  vertical-align: middle;
+}
+
+.product-image-cell {
+  width: 60px;
+  padding: 5px !important;
+}
+
+.product-thumbnail {
+  width: 50px;
+  height: 50px;
+  object-fit: contain;
+  border: 1px solid #eee;
+  border-radius: 3px;
+}
+
+.empty-cart {
+  text-align: center;
+  padding: 20px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1200px) {
+  .start-sale-container {
+    grid-template-columns: 1fr;
   }
   
-  /* Customer Section */
-  .customer-section {
-    grid-column: 1 / -1;
-    background-color: white;
-    padding: 15px;
-    border-radius: 8px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-  }
-  
-  .customer-section h3 {
-    color: #b8860b;
-    margin-top: 0;
-    border-bottom: 1px solid #eee;
-    padding-bottom: 10px;
-  }
-  
-  .customer-form {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 15px;
-  }
-  
-  .form-group {
-    margin-bottom: 10px;
-  }
-  
-  .form-group label {
-    display: block;
-    margin-bottom: 5px;
-    font-weight: 500;
-    color: #555;
-  }
-  
-  .form-group input,
-  .form-group select {
-    width: 100%;
-    padding: 8px 12px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    font-size: 14px;
-  }
-  
-  .form-group input[type="checkbox"] {
-    width: auto;
-    margin-right: 8px;
-  }
-  
-  /* Product Section */
-  .product-section {
-    background-color: white;
-    padding: 15px;
-    border-radius: 8px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-    flex-direction: column;
-  }
-  
-  .product-section h3 {
-    color: #b8860b;
-    margin-top: 0;
-    border-bottom: 1px solid #eee;
-    padding-bottom: 10px;
-  }
-  
-  .product-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-bottom: 15px;
-  }
-  
-  .product-table th {
-    background-color: #f5f5f5;
-    padding: 10px;
-    text-align: left;
-    font-weight: 500;
-    color: #555;
-  }
-  
-  .product-table td {
-    padding: 10px;
-    border-bottom: 1px solid #eee;
-  }
-  
-  .product-table select,
-  .product-table input {
-    width: 100%;
-    padding: 8px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-  }
-  
-  .making-charge-group {
-    display: flex;
-  }
-  
-  .making-charge-group input {
-    flex: 1;
-    border-radius: 4px 0 0 4px;
-  }
-  
-  .making-charge-group select {
-    width: 60px;
-    border-radius: 0 4px 4px 0;
-    border-left: none;
-  }
-  
-  .remove-btn {
-    background: none;
-    border: none;
-    color: #d9534f;
-    cursor: pointer;
-    font-size: 16px;
-    padding: 5px;
-  }
-  
-  .add-product-btn {
-    background-color: #b8860b;
-    color: white;
-    border: none;
-    padding: 8px 15px;
-    border-radius: 4px;
-    cursor: pointer;
-    font-weight: 500;
-  }
-  
-  .add-product-btn:hover {
-    background-color: #a5770a;
-  }
-  
-  /* Summary Sidebar */
   .summary-sidebar {
-    background-color: white;
-    padding: 15px;
-    border-radius: 8px;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-    align-self: start;
+    margin-top: 20px;
   }
   
-  .summary-sidebar h3 {
-    color: #b8860b;
-    margin-top: 0;
-    border-bottom: 1px solid #eee;
-    padding-bottom: 10px;
-  }
-  
-  .summary-details {
-    margin-bottom: 20px;
-  }
-  
-  .summary-row {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 10px;
-    padding: 8px 0;
-    border-bottom: 1px dashed #eee;
-  }
-  
-  .summary-row:last-child {
-    border-bottom: none;
-  }
-  
-  .discount-row {
-    flex-wrap: wrap;
-  }
-  
-  .discount-controls {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-  }
-  
-  .discount-controls input {
-    width: 60px;
-    padding: 5px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-  }
-  
-  .discount-controls select {
-    padding: 5px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-  }
-  
-  .total-row {
-    font-weight: bold;
-    font-size: 1.1em;
-    color: #006400;
-    border-top: 2px solid #eee;
-    margin-top: 10px;
-    padding-top: 10px;
-  }
-  
-  .warning {
-    color: #d9534f;
-  }
-  
-  .action-buttons {
-    display: grid;
+  .form-row {
+    flex-direction: column;
     gap: 10px;
   }
-  
-  .invoice-btn,
-  .whatsapp-btn,
-  .save-btn,
-  .new-sale-btn {
-    padding: 10px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-weight: 500;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-  }
-  
-  .invoice-btn {
-    background-color: #5bc0de;
-    color: white;
-  }
-  
-  .whatsapp-btn {
-    background-color: #25D366;
-    color: white;
-  }
-  
-  .save-btn {
-    background-color: #5cb85c;
-    color: white;
-  }
-  
-  .new-sale-btn {
-    background-color: #f0ad4e;
-    color: white;
-  }
-  
-  .invoice-btn:hover,
-  .whatsapp-btn:hover,
-  .save-btn:hover,
-  .new-sale-btn:hover {
-    opacity: 0.9;
-  }
-  
-  /* Dark Mode Support */
-  .dark-mode .start-sale-container {
-    background-color: #333;
-  }
-  
-  .dark-mode .customer-section,
-  .dark-mode .product-section,
-  .dark-mode .summary-sidebar {
-    background-color: #444;
-    color: #fff;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
-  }
-  
-  .dark-mode .product-table th {
-    background-color: #555;
-    color: #fff;
-  }
-  
-  .dark-mode .form-group input,
-  .dark-mode .form-group select,
-  .dark-mode .product-table select,
-  .dark-mode .product-table input {
-    background-color: #555;
-    color: #fff;
-    border-color: #666;
-  }
-  
-  .dark-mode .summary-row {
-    border-bottom-color: #555;
-  }
-  
-  .dark-mode .total-row {
-    border-top-color: #555;
-    color: #7fff7f;
-  }
-  
-  .dark-mode .warning {
-    color: #ff7f7f;
-  }
+}
