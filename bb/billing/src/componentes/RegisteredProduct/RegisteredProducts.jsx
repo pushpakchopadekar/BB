@@ -170,9 +170,7 @@ const RegisteredProducts = () => {
       <div className="products-header">
         <h2>Registered Products</h2>
         <div className="header-actions">
-          <button className="add-btn" onClick={handleAddNew}>
-            ➕ Add New Product
-          </button>
+          
           <button className="export-btn">
             ⬇️ Export
           </button>

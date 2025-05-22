@@ -19,7 +19,7 @@
 }
 
 .customer-section h3 {
-  color: #b8860b;
+  color: #4F46E5;
   margin-top: 0;
   border-bottom: 1px solid #eee;
   padding-bottom: 10px;
@@ -65,7 +65,7 @@
 }
 
 .product-section h3 {
-  color: #b8860b;
+  color: #4F46E5;
   margin-top: 0;
   border-bottom: 1px solid #eee;
   padding-bottom: 10px;
@@ -245,7 +245,7 @@
 }
 
 .add-product-btn {
-  background-color: #b8860b;
+  background-color: #4F46E5;
   color: white;
   border: none;
   padding: 8px 15px;
@@ -273,7 +273,7 @@
 }
 
 .summary-sidebar h3 {
-  color: #b8860b;
+  color: #4F46E5;
   margin-top: 0;
   border-bottom: 1px solid #eee;
   padding-bottom: 10px;
@@ -352,7 +352,7 @@
 }
 
 .invoice-btn {
-  background-color: #5bc0de;
+  background-color: #4F46E5;
   color: white;
 }
 
@@ -390,7 +390,7 @@
 }
 
 .scan-btn {
-  background-color: #5bc0de;
+  background-color: #4F46E5;
   color: white;
   border: none;
   border-radius: 4px;
@@ -450,7 +450,7 @@
 
 .add-product-form h4 {
   margin-top: 0;
-  color: #b8860b;
+  color: #4F46E5;
   border-bottom: 1px solid #ddd;
   padding-bottom: 10px;
 }
@@ -544,7 +544,7 @@
 
 .add-product-form h4 {
   margin-top: 0;
-  color: #b8860b;
+  color: #4F46E5;
   border-bottom: 1px solid #ddd;
   padding-bottom: 10px;
 }

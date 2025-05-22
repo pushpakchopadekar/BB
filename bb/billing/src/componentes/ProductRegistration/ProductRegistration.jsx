@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import JsBarcode from 'jsbarcode';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import '../ProductRegistration/ProductRegistration.css';
 
 const ProductRegistration = () => {
@@ -18,7 +20,8 @@ const ProductRegistration = () => {
   const [barcodeImage, setBarcodeImage] = useState(null);
   const [showBarcode, setShowBarcode] = useState(false);
   const [barcodeGenerated, setBarcodeGenerated] = useState(false);
-  const [showSuccessPopup, setShowSuccessPopup] = useState(false);
+  const [show3DModal, setShow3DModal] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const categories = ['Gold', 'Silver', 'Emitation'];
 
@@ -30,12 +33,30 @@ const ProductRegistration = () => {
 
   const generateBarcode = () => {
     if (barcodeGenerated) {
-      alert('Barcode already generated for this product. Please submit or reset the form.');
+      toast.warning('Barcode already generated for this product. Please submit or reset the form.', {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "colored",
+      });
       return;
     }
 
     if (!product.name || !product.category) {
-      alert('Please fill in required product information first');
+      toast.error('Please fill in required product information first', {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "colored",
+      });
       return;
     }
 
@@ -57,9 +78,29 @@ const ProductRegistration = () => {
       setBarcodeImage(imageUrl);
       setShowBarcode(true);
       setBarcodeGenerated(true);
+      
+      toast.success('Barcode generated successfully!', {
+        position: "top-right",
+        autoClose: 2000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "colored",
+      });
     } catch (error) {
       console.error("Barcode generation error:", error);
-      alert("Failed to generate barcode. Please try again.");
+      toast.error("Failed to generate barcode. Please try again.", {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "colored",
+      });
     }
   };
 
@@ -67,14 +108,21 @@ const ProductRegistration = () => {
     const { name, value } = e.target;
 
     if (barcodeGenerated && (name === 'name' || name === 'category')) {
-      if (window.confirm('Changing product information will reset the barcode. Continue?')) {
-        setBarcode('');
-        setBarcodeImage(null);
-        setShowBarcode(false);
-        setBarcodeGenerated(false);
-      } else {
-        return;
-      }
+      toast.info('Changing product information will reset the barcode', {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "colored",
+      });
+      
+      setBarcode('');
+      setBarcodeImage(null);
+      setShowBarcode(false);
+      setBarcodeGenerated(false);
     }
 
     setProduct(prev => ({
@@ -85,39 +133,102 @@ const ProductRegistration = () => {
 
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setPreviewImage(reader.result);
-        setProduct(prev => ({
-          ...prev,
-          images: [...prev.images, reader.result]
-        }));
-      };
-      reader.readAsDataURL(file);
-    }
-  };
+    if (!file) return;
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (!barcode) {
-      alert('Please generate a barcode before submitting');
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error('Image size exceeds 2MB limit', {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "colored",
+      });
       return;
     }
 
-    console.log('Product submitted:', {
-      ...product,
-      barcode
-    });
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setPreviewImage(reader.result);
+      setProduct(prev => ({
+        ...prev,
+        images: [...prev.images, reader.result]
+      }));
+      toast.success('Image uploaded successfully!', {
+        position: "top-right",
+        autoClose: 2000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "colored",
+      });
+    };
+    reader.readAsDataURL(file);
+  };
 
-    // Show success popup
-    setShowSuccessPopup(true);
-    setTimeout(() => {
-      setShowSuccessPopup(false);
-    }, 3000);
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!barcode) {
+      toast.error('Please generate a barcode before submitting', {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "colored",
+      });
+      return;
+    }
 
-    // Reset form
-    resetForm();
+    setIsSubmitting(true);
+    
+    // Simulate API call
+    try {
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      console.log('Product submitted:', {
+        ...product,
+        barcode
+      });
+
+      toast.success('Product registered successfully!', {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "colored",
+      });
+
+      // Show 3D success modal
+      setShow3DModal(true);
+      
+      // Reset form after delay
+      setTimeout(() => {
+        resetForm();
+        setIsSubmitting(false);
+      }, 1000);
+    } catch (error) {
+      toast.error('Failed to register product. Please try again.', {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "colored",
+      });
+      setIsSubmitting(false);
+    }
   };
 
   const resetForm = () => {
@@ -135,6 +246,17 @@ const ProductRegistration = () => {
     setShowBarcode(false);
     setBarcode('');
     setBarcodeGenerated(false);
+    
+    toast.info('Form has been reset', {
+      position: "top-right",
+      autoClose: 2000,
+      hideProgressBar: false,
+      closeOnClick: true,
+      pauseOnHover: true,
+      draggable: true,
+      progress: undefined,
+      theme: "colored",
+    });
   };
 
   const downloadBarcode = () => {
@@ -146,6 +268,17 @@ const ProductRegistration = () => {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    
+    toast.success('Barcode downloaded successfully!', {
+      position: "top-right",
+      autoClose: 2000,
+      hideProgressBar: false,
+      closeOnClick: true,
+      pauseOnHover: true,
+      draggable: true,
+      progress: undefined,
+      theme: "colored",
+    });
   };
 
   const printBarcode = () => {
@@ -188,46 +321,83 @@ const ProductRegistration = () => {
       </html>
     `);
     printWindow.document.close();
+    
+    toast.success('Barcode sent to printer!', {
+      position: "top-right",
+      autoClose: 2000,
+      hideProgressBar: false,
+      closeOnClick: true,
+      pauseOnHover: true,
+      draggable: true,
+      progress: undefined,
+      theme: "colored",
+    });
+  };
+
+  const close3DModal = () => {
+    setShow3DModal(false);
   };
 
   return (
     <div className="product-registration">
-      <h2>Product Registration</h2>
+      <ToastContainer 
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="colored"
+      />
+      
+      <h2 className="form-title">
+        <span className="title-icon">📦</span>
+        Product Registration
+      </h2>
 
-      <form onSubmit={handleSubmit}>
-        <div className="form-section">
-          <h3>Basic Product Information</h3>
+      <form onSubmit={handleSubmit} className="product-form">
+        <div className="form-section card-3d">
+          <h3 className="section-title">
+            <span className="section-icon">ℹ️</span>
+            Basic Product Information
+          </h3>
           <div className="form-row">
-            <div className="form-group">
-              <label>Product Name*</label>
+            <div className="form-group floating-label">
               <input 
                 type="text" 
                 name="name" 
                 value={product.name}
                 onChange={handleChange}
                 required
+                className={product.name ? 'has-value' : ''}
               />
+              <label>Product Name*</label>
+              <span className="highlight"></span>
             </div>
 
-            <div className="form-group">
-              <label>Category*</label>
+            <div className="form-group floating-label">
               <select 
                 name="category" 
                 value={product.category}
                 onChange={handleChange}
                 required
+                className={product.category ? 'has-value' : ''}
               >
-                <option value="">Select Category</option>
+                <option value=""></option>
                 {categories.map(cat => (
                   <option key={cat} value={cat}>{cat}</option>
                 ))}
               </select>
+              <label>Category*</label>
+              <span className="highlight"></span>
             </div>
           </div>
 
           {product.category === 'Gold' || product.category === 'Silver' ? (
-            <div className="form-group">
-              <label>Weight (grams)*</label>
+            <div className="form-group floating-label">
               <input 
                 type="number" 
                 name="weight" 
@@ -236,12 +406,14 @@ const ProductRegistration = () => {
                 step="0.01"
                 min="0"
                 required
+                className={product.weight ? 'has-value' : ''}
               />
+              <label>Weight (grams)*</label>
+              <span className="highlight"></span>
             </div>
           ) : (
             <div className="form-row">
-              <div className="form-group">
-                <label>Purchase Price*</label>
+              <div className="form-group floating-label">
                 <input 
                   type="number" 
                   name="purchasePrice" 
@@ -250,10 +422,12 @@ const ProductRegistration = () => {
                   step="0.01"
                   min="0"
                   required
+                  className={product.purchasePrice ? 'has-value' : ''}
                 />
+                <label>Purchase Price*</label>
+                <span className="highlight"></span>
               </div>
-              <div className="form-group">
-                <label>Selling Price*</label>
+              <div className="form-group floating-label">
                 <input 
                   type="number" 
                   name="sellingPrice" 
@@ -262,17 +436,22 @@ const ProductRegistration = () => {
                   step="0.01"
                   min="0"
                   required
+                  className={product.sellingPrice ? 'has-value' : ''}
                 />
+                <label>Selling Price*</label>
+                <span className="highlight"></span>
               </div>
             </div>
           )}
         </div>
 
-        <div className="form-section">
-          <h3>Inventory Details</h3>
+        <div className="form-section card-3d">
+          <h3 className="section-title">
+            <span className="section-icon">📊</span>
+            Inventory Details
+          </h3>
           <div className="form-row">
-            <div className="form-group">
-              <label>Quantity*</label>
+            <div className="form-group floating-label">
               <input 
                 type="number" 
                 name="quantity" 
@@ -280,35 +459,47 @@ const ProductRegistration = () => {
                 onChange={handleChange}
                 min="1"
                 required
+                className={product.quantity ? 'has-value' : ''}
               />
+              <label>Quantity*</label>
+              <span className="highlight"></span>
             </div>
 
             <div className="form-group">
-              <label>Barcode Number</label>
-              <input 
-                type="text" 
-                value={barcode}
-                readOnly
-                className="read-only"
-                placeholder={barcodeGenerated ? "Barcode generated" : "Click 'Generate Barcode' to create"}
-              />
+              <div className="barcode-input-container">
+                <input 
+                  type="text" 
+                  value={barcode}
+                  readOnly
+                  className="read-only"
+                  placeholder={barcodeGenerated ? "Barcode generated" : "Click 'Generate Barcode' to create"}
+                />
+                <span className="barcode-icon">✂️</span>
+              </div>
             </div>
           </div>
         </div>
 
         <div className="image-barcode-container">
-          <div className="form-section image-section">
-            <h3>Product Image</h3>
+          <div className="form-section image-section card-3d">
+            <h3 className="section-title">
+              <span className="section-icon">🖼️</span>
+              Product Image
+            </h3>
             <div className="image-upload-container">
               <div className="image-preview">
                 {previewImage ? (
-                  <img src={previewImage} alt="Product preview" />
+                  <img src={previewImage} alt="Product preview" className="preview-image" />
                 ) : (
-                  <div className="placeholder">No image selected</div>
+                  <div className="placeholder">
+                    <div className="placeholder-icon">📷</div>
+                    <p>No image selected</p>
+                  </div>
                 )}
               </div>
               <div className="upload-controls">
-                <label className="upload-btn">
+                <label className="upload-btn pulse">
+                  <span className="upload-icon">⬆️</span>
                   Upload Image
                   <input 
                     type="file" 
@@ -317,21 +508,25 @@ const ProductRegistration = () => {
                     style={{ display: 'none' }}
                   />
                 </label>
-                <p>Maximum file size: 2MB</p>
+                <p className="upload-hint">Maximum file size: 2MB</p>
               </div>
             </div>
           </div>
 
-          <div className="form-section barcode-section">
-            <h3>Barcode Generation</h3>
+          <div className="form-section barcode-section card-3d">
+            <h3 className="section-title">
+              <span className="section-icon">🔖</span>
+              Barcode Generation
+            </h3>
             <div className="form-row">
               <div className="form-group">
                 <button 
                   type="button" 
-                  className="generate-barcode-btn"
+                  className={`generate-barcode-btn ${barcodeGenerated ? 'generated' : ''}`}
                   onClick={generateBarcode}
                   disabled={barcodeGenerated}
                 >
+                  <span className="btn-icon">{barcodeGenerated ? "✓" : "🔳"}</span>
                   {barcodeGenerated ? "Barcode Generated" : "Generate Barcode"}
                 </button>
               </div>
@@ -341,7 +536,7 @@ const ProductRegistration = () => {
               <div className="barcode-display-container">
                 <div className="barcode-content">
                   <div className="barcode-image-container">
-                    <img src={barcodeImage} alt="Barcode" />
+                    <img src={barcodeImage} alt="Barcode" className="barcode-image" />
                   </div>
                   <div className="barcode-info">
                     <h4>Product Information</h4>
@@ -361,14 +556,16 @@ const ProductRegistration = () => {
                     className="download-barcode-btn"
                     onClick={downloadBarcode}
                   >
-                    Download Barcode
+                    <span className="btn-icon">⬇️</span>
+                    Download
                   </button>
                   <button 
                     type="button" 
                     className="print-barcode-btn"
                     onClick={printBarcode}
                   >
-                    Print Barcode
+                    <span className="btn-icon">🖨️</span>
+                    Print
                   </button>
                 </div>
               </div>
@@ -382,27 +579,60 @@ const ProductRegistration = () => {
             className="cancel-btn"
             onClick={resetForm}
           >
+            <span className="btn-icon">❌</span>
             Cancel
           </button>
           <button 
             type="submit" 
-            className="submit-btn"
-            disabled={!barcodeGenerated}
+            className={`submit-btn ${isSubmitting ? 'submitting' : ''}`}
+            disabled={!barcodeGenerated || isSubmitting}
           >
-            Register Product
+            {isSubmitting ? (
+              <>
+                <span className="spinner"></span>
+                Processing...
+              </>
+            ) : (
+              <>
+                <span className="btn-icon">✅</span>
+                Register Product
+              </>
+            )}
           </button>
         </div>
       </form>
 
-      {/* Success Popup */}
-      {showSuccessPopup && (
-        <div className="success-popup">
-          <div className="popup-content">
-            <svg className="checkmark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
-              <circle className="checkmark-circle" cx="26" cy="26" r="25" fill="none"/>
-              <path className="checkmark-check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
-            </svg>
-            <p>Product registered successfully!</p>
+      {/* 3D Success Modal */}
+      {show3DModal && (
+        <div className="modal-3d-container">
+          <div className="modal-3d-backdrop" onClick={close3DModal}></div>
+          <div className="modal-3d-content">
+            <div className="modal-3d-body">
+              <div className="success-animation">
+                <svg className="checkmark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
+                  <circle className="checkmark-circle" cx="26" cy="26" r="25" fill="none"/>
+                  <path className="checkmark-check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
+                </svg>
+                <div className="confetti"></div>
+                <div className="confetti"></div>
+                <div className="confetti"></div>
+                <div className="confetti"></div>
+                <div className="confetti"></div>
+                <div className="confetti"></div>
+                <div className="confetti"></div>
+                <div className="confetti"></div>
+                <div className="confetti"></div>
+              </div>
+              <h3 className="modal-title">Success!</h3>
+              <p className="modal-text">Product registered successfully</p>
+              <div className="modal-product-info">
+                <p><strong>Name:</strong> {product.name}</p>
+                <p><strong>Barcode:</strong> {barcode}</p>
+              </div>
+              <button className="modal-close-btn" onClick={close3DModal}>
+                Close
+              </button>
+            </div>
           </div>
         </div>
       )}

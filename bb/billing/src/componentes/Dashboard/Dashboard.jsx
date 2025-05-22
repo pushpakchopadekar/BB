@@ -4,19 +4,24 @@ import ProductRegistration from '../ProductRegistration/ProductRegistration';
 import RegisteredProducts from '../RegisteredProduct/RegisteredProducts';
 import StartSale from '../SaleProcess/SaleProcess';
 import SalesHistory from '../SalesHistory/SalesHistory';
+import SalesOverview from '../SalesOverview/SalesOverview';
+// import AvailableStock from '../AvailableStock/AvailableStock';
+
 
 // Import icons from react-icons library
 import { 
   FiHome, FiPackage, FiShoppingCart, FiList, FiDollarSign, FiPieChart,
   FiAlertTriangle, FiUsers, FiLogOut, FiSun, FiMoon, FiEdit, FiFilter,
-  FiPrinter, FiTrendingUp, FiAlertCircle, FiClock, FiCalendar, FiFileText
+  FiPrinter, FiTrendingUp, FiAlertCircle, FiClock, FiCalendar, FiFileText,
+  FiUser, FiLock, FiCamera, FiCheckCircle, FiXCircle, FiChevronDown
 } from 'react-icons/fi';
 import { 
   FaRupeeSign, FaCoins, FaGem, FaRing, FaChartLine, 
   FaExclamationTriangle, FaMoneyBillWave, FaBoxes, FaWeightHanging,
   FaPercentage, FaReceipt, FaUserTie, FaSearchDollar, FaFileInvoiceDollar,
-  FaChartBar, FaWarehouse
+  FaChartBar, FaWarehouse, FaKey, FaToggleOn, FaToggleOff
 } from 'react-icons/fa';
+import AvailableStock from '../AvailableStock/AvailableStock';
 
 const Dashboard = ({ onLogout }) => {
   const [darkMode, setDarkMode] = useState(false);
@@ -33,7 +38,27 @@ const Dashboard = ({ onLogout }) => {
   const [filterInvoiceNo, setFilterInvoiceNo] = useState('');
   const [filterCustomerName, setFilterCustomerName] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
+  const [showProfilePanel, setShowProfilePanel] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [passwordError, setPasswordError] = useState('');
+  const [passwordSuccess, setPasswordSuccess] = useState('');
+  const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
+  const [profileImage, setProfileImage] = useState(null);
+  const [activeProfileSection, setActiveProfileSection] = useState('userInfo');
   const customersPerPage = 5;
+
+  // Sample user data
+  const userData = {
+    username: 'admin_jewellery',
+    fullName: 'Admin User',
+    email: 'admin@jewellerybilling.com',
+    avatar: '👤',
+    phone: '+91 9876543210',
+    address: '123 Jewellery Street, Mumbai, India',
+    joinDate: '15 Jan 2022'
+  };
 
   // Sample data
   const dashboardData = {
@@ -53,12 +78,7 @@ const Dashboard = ({ onLogout }) => {
       { id: 1002, name: "Neha Gupta", phone: "8765432109", email: "neha@example.com", totalPurchases: 380000, lastPurchase: "2023-05-15" },
       { id: 1003, name: "Amit Singh", phone: "7654321098", email: "amit@example.com", totalPurchases: 22500, lastPurchase: "2023-05-14" },
       { id: 1004, name: "Priya Sharma", phone: "6543210987", email: "priya@example.com", totalPurchases: 16500, lastPurchase: "2023-05-14" },
-      { id: 1005, name: "Vikram Patel", phone: "5432109876", email: "vikram@example.com", totalPurchases: 28500, lastPurchase: "2023-05-13" },
-      { id: 1006, name: "Sneha Reddy", phone: "4321098765", email: "sneha@example.com", totalPurchases: 32000, lastPurchase: "2023-05-12" },
-      { id: 1007, name: "Arun Kumar", phone: "3210987654", email: "arun@example.com", totalPurchases: 41000, lastPurchase: "2023-05-11" },
-      { id: 1008, name: "Meena Desai", phone: "2109876543", email: "meena@example.com", totalPurchases: 28000, lastPurchase: "2023-05-10" },
-      { id: 1009, name: "Rajesh Iyer", phone: "1098765432", email: "rajesh@example.com", totalPurchases: 35000, lastPurchase: "2023-05-09" },
-      { id: 1010, name: "Anjali Menon", phone: "0987654321", email: "anjali@example.com", totalPurchases: 42000, lastPurchase: "2023-05-08" }
+      { id: 1005, name: "Vikram Patel", phone: "5432109876", email: "vikram@example.com", totalPurchases: 28500, lastPurchase: "2023-05-13" }
     ],
     salesData: {
       labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
@@ -81,7 +101,8 @@ const Dashboard = ({ onLogout }) => {
   const handleMenuClick = (menu) => {
     console.log('Menu clicked:', menu);
     setActiveMenu(menu);
-    setCurrentPage(1); // Reset to first page when changing menus
+    setCurrentPage(1);
+    setShowProfilePanel(false);
   };
 
   const handleEditRates = () => {
@@ -110,7 +131,7 @@ const Dashboard = ({ onLogout }) => {
   };
 
   const handleFilterApply = () => {
-    setCurrentPage(1); // Reset to first page when applying filters
+    setCurrentPage(1);
     setShowCustomerFilter(false);
   };
 
@@ -121,7 +142,56 @@ const Dashboard = ({ onLogout }) => {
     setShowCustomerFilter(false);
   };
 
-  // Filter customers based on filter criteria
+  const toggleProfilePanel = () => {
+    setShowProfilePanel(!showProfilePanel);
+    if (!showProfilePanel) {
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+      setPasswordError('');
+      setPasswordSuccess('');
+    }
+  };
+
+  const handlePasswordChange = (e) => {
+    e.preventDefault();
+    setPasswordError('');
+    setPasswordSuccess('');
+
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      setPasswordError('All fields are required');
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      setPasswordError('New passwords do not match');
+      return;
+    }
+
+    if (newPassword.length < 8) {
+      setPasswordError('Password must be at least 8 characters');
+      return;
+    }
+
+    setTimeout(() => {
+      setPasswordSuccess('Password changed successfully!');
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+    }, 1000);
+  };
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setProfileImage(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const filteredCustomers = dashboardData.customerList.filter(customer => {
     const matchesInvoice = filterInvoiceNo === '' || customer.id.toString().includes(filterInvoiceNo);
     const matchesName = filterCustomerName === '' || 
@@ -129,7 +199,6 @@ const Dashboard = ({ onLogout }) => {
     return matchesInvoice && matchesName;
   });
 
-  // Pagination logic
   const indexOfLastCustomer = currentPage * customersPerPage;
   const indexOfFirstCustomer = indexOfLastCustomer - customersPerPage;
   const currentCustomers = filteredCustomers.slice(indexOfFirstCustomer, indexOfLastCustomer);
@@ -138,7 +207,6 @@ const Dashboard = ({ onLogout }) => {
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
   const renderActiveComponent = () => {
-    console.log('Rendering:', activeMenu);
     switch(activeMenu) {
       case 'Dashboard':
         return (
@@ -360,7 +428,7 @@ const Dashboard = ({ onLogout }) => {
                       <th>Email</th>
                       <th>Total Purchases</th>
                       <th>Last Purchase</th>
-                      <th>Invoice</th>
+                      <th>Actions</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -424,6 +492,8 @@ const Dashboard = ({ onLogout }) => {
         return <RegisteredProducts />;
       case 'Sales History':
         return <SalesHistory />;
+        case 'Available Stock':
+          return <AvailableStock/>
       case 'Invoices':
         return (
           <div className="coming-soon">
@@ -431,20 +501,10 @@ const Dashboard = ({ onLogout }) => {
             <p>This feature is coming soon!</p>
           </div>
         );
-      case 'Sales Overview':
-        return (
-          <div className="coming-soon">
-            <h2><FaChartBar /> Sales Overview</h2>
-            <p>This feature is coming soon!</p>
-          </div>
-        );
+        case 'Sales Overview':
+          return <SalesOverview />;
       case 'Stock Alert':
-        return (
-          <div className="coming-soon">
-            <h2><FaWarehouse /> Stock Alert</h2>
-            <p>This feature is coming soon!</p>
-          </div>
-        );
+        return <Alert/>
       default:
         return (
           <div className="coming-soon">
@@ -497,13 +557,16 @@ const Dashboard = ({ onLogout }) => {
           >
             <FiPrinter className="menu-icon" /> <span> Sales History</span>
           </li>
+          <li 
+    className={activeMenu === 'Available Stock' ? 'active' : ''}
+    onClick={() => handleMenuClick('Available Stock')}
+  >
+    <FaBoxes className="menu-icon" /> <span> Available Stock</span>
+  </li>
         </ul>
-        <button className="logout-btn" onClick={handleLogoutClick}>
-          <FiLogOut /> Logout
-        </button>
         
         <div className="sidebar-footer">
-          <p>Jewellery Billing v1.0</p>
+         
         </div>
       </div>
       
@@ -539,18 +602,191 @@ const Dashboard = ({ onLogout }) => {
               </button>
             </div>
             <div className="header-right">
-              <button className="mode-toggle" onClick={toggleDarkMode}>
-                {darkMode ? <FiSun /> : <FiMoon />}
-                {darkMode ? ' Light Mode' : ' Dark Mode'}
-              </button>
-             
-              <div className="user-profile">
-                <span></span>
-                <div className="avatar">👤</div>
+              <div className="user-profile" onClick={toggleProfilePanel}>
+                <div className="avatar">
+                  {profileImage ? (
+                    <img src={profileImage} alt="Profile" className="profile-image" />
+                  ) : (
+                    userData.avatar
+                  )}
+                </div>
               </div>
             </div>
           </div>
         </header>
+        
+        {/* Profile Panel Overlay */}
+        {showProfilePanel && (
+          <div className="profile-panel-overlay" onClick={toggleProfilePanel}>
+            <div className="profile-panel" onClick={e => e.stopPropagation()}>
+              <button className="close-profile-panel" onClick={toggleProfilePanel}>
+                <FiXCircle />
+              </button>
+              
+              <div className="profile-header">
+                <div className="profile-avatar">
+                  {profileImage ? (
+                    <img src={profileImage} alt="Profile" className="profile-image" />
+                  ) : (
+                    <div className="default-avatar">{userData.avatar}</div>
+                  )}
+                  <label className="change-avatar-btn">
+                    <FiCamera />
+                    <input 
+                      type="file" 
+                      accept="image/*" 
+                      onChange={handleImageChange}
+                      style={{ display: 'none' }}
+                    />
+                  </label>
+                </div>
+                <h2>{userData.fullName}</h2>
+                <p className="user-email">{userData.email}</p>
+              </div>
+              
+              <div className="profile-navigation">
+                <button 
+                  className={`profile-nav-btn ${activeProfileSection === 'userInfo' ? 'active' : ''}`}
+                  onClick={() => setActiveProfileSection('userInfo')}
+                >
+                  <FiUser /> User Information
+                </button>
+                <button 
+                  className={`profile-nav-btn ${activeProfileSection === 'security' ? 'active' : ''}`}
+                  onClick={() => setActiveProfileSection('security')}
+                >
+                  <FaKey /> Security Settings
+                </button>
+                <button 
+                  className={`profile-nav-btn ${activeProfileSection === 'appearance' ? 'active' : ''}`}
+                  onClick={() => setActiveProfileSection('appearance')}
+                >
+                  <FiSun /> Appearance
+                </button>
+              </div>
+              
+              <div className="profile-content">
+                {activeProfileSection === 'userInfo' && (
+                  <div className="profile-section">
+                    <div className="info-item">
+                      <span>Username:</span>
+                      <span>{userData.username}</span>
+                    </div>
+                    <div className="info-item">
+                      <span>Full Name:</span>
+                      <span>{userData.fullName}</span>
+                    </div>
+                    <div className="info-item">
+                      <span>Email:</span>
+                      <span>{userData.email}</span>
+                    </div>
+                    </div>
+                    
+                )}
+                
+                {activeProfileSection === 'security' && (
+                  <div className="profile-section">
+                    <form onSubmit={handlePasswordChange} className="password-form">
+                      <h3>Change Password</h3>
+                      <div className="form-group">
+                        <label><FiLock /> Current Password</label>
+                        <input 
+                          type="password" 
+                          value={currentPassword}
+                          onChange={(e) => setCurrentPassword(e.target.value)}
+                          placeholder="Enter current password"
+                        />
+                      </div>
+                      <div className="form-group">
+                        <label><FiLock /> New Password</label>
+                        <input 
+                          type="password" 
+                          value={newPassword}
+                          onChange={(e) => setNewPassword(e.target.value)}
+                          placeholder="Enter new password"
+                        />
+                      </div>
+                      <div className="form-group">
+                        <label><FiLock /> Confirm Password</label>
+                        <input 
+                          type="password" 
+                          value={confirmPassword}
+                          onChange={(e) => setConfirmPassword(e.target.value)}
+                          placeholder="Confirm new password"
+                        />
+                      </div>
+                      {passwordError && <div className="error-message"><FiAlertCircle /> {passwordError}</div>}
+                      {passwordSuccess && <div className="success-message"><FiCheckCircle /> {passwordSuccess}</div>}
+                      <button type="submit" className="change-password-btn">
+                        Change Password
+                      </button>
+                    </form>
+                    
+                    <div className="two-factor-auth">
+                      <h3>Two-Factor Authentication</h3>
+                      <div className="toggle-label">
+                        <span>Status:</span>
+                        <button 
+                          className={`toggle-btn ${twoFactorEnabled ? 'enabled' : 'disabled'}`}
+                          onClick={() => setTwoFactorEnabled(!twoFactorEnabled)}
+                        >
+                          {twoFactorEnabled ? <FaToggleOn /> : <FaToggleOff />}
+                          {twoFactorEnabled ? 'Enabled' : 'Disabled'}
+                        </button>
+                      </div>
+                      <p className="toggle-description">
+                        Adds an extra layer of security to your account by requiring a verification code when logging in.
+                      </p>
+                      {twoFactorEnabled && (
+                        <div className="two-factor-code">
+                          <p>Scan this QR code with your authenticator app:</p>
+                          <div className="qr-placeholder"></div>
+                          <p>Or enter this code manually: <strong>JBSY-4H2K-9L8M</strong></p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+                
+                {activeProfileSection === 'appearance' && (
+                  <div className="profile-section">
+                    <h3>Theme Preferences</h3>
+                    <div className="theme-options">
+                      <div 
+                        className={`theme-option ${!darkMode ? 'active' : ''}`}
+                        onClick={() => setDarkMode(false)}
+                      >
+                        <div className="theme-preview light-theme">
+                          <div className="theme-header"></div>
+                          <div className="theme-content"></div>
+                        </div>
+                        <span>Light Mode</span>
+                      </div>
+                      <div 
+                        className={`theme-option ${darkMode ? 'active' : ''}`}
+                        onClick={() => setDarkMode(true)}
+                      >
+                        <div className="theme-preview dark-theme">
+                          <div className="theme-header"></div>
+                          <div className="theme-content"></div>
+                        </div>
+                        <span>Dark Mode</span>
+                      </div>
+                    </div>
+                    
+                   
+                  </div>
+                )}
+              </div>
+              
+              <div className="profile-actions">
+                <button className="logout-btn" onClick={handleLogoutClick}>
+                  <FiLogOut /> Logout
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
         
         {/* Scrollable Content Area */}
         <div className="scrollable-content">
