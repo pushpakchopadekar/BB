@@ -1,5 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import './RegisteredProducts.css';
+import { database } from '../../firebase';
+import { ref, onValue, off, remove, update } from 'firebase/database';
+import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const RegisteredProducts = () => {
   const [products, setProducts] = useState([]);
@@ -16,29 +20,85 @@ const RegisteredProducts = () => {
   const [productToDelete, setProductToDelete] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Fetch products from API or database
+  // Fetch products from Firebase
   useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        // Replace this with your actual API call
-        // const response = await fetch('your-api-endpoint');
-        // const data = await response.json();
-        // setProducts(data);
-        
-        // For now, we'll set products to empty array
-        setProducts([]);
+    const productsRef = ref(database, 'products');
+    
+    const fetchProducts = () => {
+      setIsLoading(true);
+      toast.info('Loading products...', {
+        position: "top-right",
+        autoClose: false,
+        hideProgressBar: false,
+        closeOnClick: false,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "colored",
+        toastId: 'loading-toast'
+      });
+
+      onValue(productsRef, (snapshot) => {
+        const data = snapshot.val();
+        if (data) {
+          const productsArray = Object.keys(data).map(key => ({
+            id: key,
+            ...data[key]
+          }));
+          setProducts(productsArray);
+          toast.dismiss('loading-toast');
+          toast.success('Products loaded successfully!', {
+            position: "top-right",
+            autoClose: 3000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+            theme: "colored",
+          });
+        } else {
+          setProducts([]);
+          toast.dismiss('loading-toast');
+          toast.info('No products found in database.', {
+            position: "top-right",
+            autoClose: 3000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+            theme: "colored",
+          });
+        }
         setIsLoading(false);
-      } catch (error) {
+      }, (error) => {
         console.error('Error fetching products:', error);
+        toast.dismiss('loading-toast');
+        toast.error('Failed to load products!', {
+          position: "top-right",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+          progress: undefined,
+          theme: "colored",
+        });
         setIsLoading(false);
-      }
+      });
     };
 
     fetchProducts();
+
+    // Cleanup function to remove the listener when component unmounts
+    return () => {
+      off(productsRef);
+    };
   }, []);
 
-  // Get unique categories from products
-  const categories = ['All', ...new Set(products.map(p => p.category))].filter(Boolean);
+  // Categories for tabs
+  const categories = ['All', 'Gold', 'Silver', 'Emitation'];
 
   // Filter and sort products
   useEffect(() => {
@@ -48,7 +108,7 @@ const RegisteredProducts = () => {
     if (searchTerm) {
       result = result.filter(p => 
         p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        p.barcode.toLowerCase().includes(searchTerm.toLowerCase())
+        (p.barcode && p.barcode.toLowerCase().includes(searchTerm.toLowerCase()))
       );
     }
 
@@ -72,17 +132,11 @@ const RegisteredProducts = () => {
       case 'name-desc':
         result.sort((a, b) => b.name.localeCompare(a.name));
         break;
-      case 'price-asc':
-        result.sort((a, b) => a.price - b.price);
-        break;
-      case 'price-desc':
-        result.sort((a, b) => b.price - a.price);
-        break;
       case 'newest':
-        result.sort((a, b) => new Date(b.lastUpdated) - new Date(a.lastUpdated));
+        result.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
         break;
       case 'oldest':
-        result.sort((a, b) => new Date(a.lastUpdated) - new Date(b.lastUpdated));
+        result.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
         break;
       default:
         break;
@@ -122,65 +176,129 @@ const RegisteredProducts = () => {
     setShowDeleteConfirm(true);
   };
 
-  const confirmDelete = () => {
-    setProducts(prev => prev.filter(p => p.id !== productToDelete));
-    setSelectedProducts(prev => prev.filter(id => id !== productToDelete));
-    setShowDeleteConfirm(false);
+  const confirmDelete = async () => {
+    try {
+      const productRef = ref(database, `products/${productToDelete}`);
+      await remove(productRef);
+      setSelectedProducts(prev => prev.filter(id => id !== productToDelete));
+      setShowDeleteConfirm(false);
+      toast.success('Product deleted successfully!', {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "colored",
+      });
+    } catch (error) {
+      console.error('Error deleting product:', error);
+      toast.error('Failed to delete product!', {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "colored",
+      });
+    }
   };
 
   // Handle bulk delete
-  const handleBulkDelete = () => {
-    setProducts(prev => prev.filter(p => !selectedProducts.includes(p.id)));
-    setSelectedProducts([]);
+  const handleBulkDelete = async () => {
+    try {
+      const deletePromises = selectedProducts.map(id => 
+        remove(ref(database, `products/${id}`))
+      );
+      await Promise.all(deletePromises);
+      setSelectedProducts([]);
+      toast.success(`${selectedProducts.length} products deleted successfully!`, {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "colored",
+      });
+    } catch (error) {
+      console.error('Error deleting products:', error);
+      toast.error('Failed to delete selected products!', {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "colored",
+      });
+    }
   };
 
-  // Handle edit product
-  const handleEdit = (product) => {
-    setEditingProduct(product);
-  };
+  // Handle export products
+  const handleExport = () => {
+    const dataToExport = filteredProducts.map(product => ({
+      'Product Name': product.name,
+      'Barcode': product.barcode,
+      'Category': product.category,
+      'Weight (grams)': product.weight || 'N/A',
+      'Stock': product.stock
+    }));
 
-  const saveEditedProduct = (updatedProduct) => {
-    setProducts(prev =>
-      prev.map(p => p.id === updatedProduct.id ? updatedProduct : p)
-    );
-    setEditingProduct(null);
-  };
+    const csvContent = [
+      Object.keys(dataToExport[0]).join(','),
+      ...dataToExport.map(item => Object.values(item).join(','))
+    ].join('\n');
 
-  // Handle add new product
-  const handleAddNew = () => {
-    const newProduct = {
-      id: Math.max(0, ...products.map(p => p.id)) + 1,
-      name: "",
-      barcode: "",
-      category: "",
-      metalType: "",
-      purity: "",
-      weight: 0,
-      price: 0,
-      stock: 0,
-      image: "https://via.placeholder.com/80",
-      lastUpdated: new Date().toISOString().split('T')[0]
-    };
-    setEditingProduct(newProduct);
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `products_export_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    toast.success('Export completed successfully!', {
+      position: "top-right",
+      autoClose: 3000,
+      hideProgressBar: false,
+      closeOnClick: true,
+      pauseOnHover: true,
+      draggable: true,
+      progress: undefined,
+      theme: "colored",
+    });
   };
 
   return (
     <div className="registered-products">
-      {/* Header Section */}
-      <div className="products-header">
-        <h2>Registered Products</h2>
-        <div className="header-actions">
-          
-          <button className="export-btn">
-            ⬇️ Export
-          </button>
-          <button
-            className="refresh-btn"
-            onClick={() => window.location.reload()}
-          >
-            🔄 Refresh
-          </button>
+     
+
+      {/* Category Tabs with Export Button */}
+      <div className="tabs-export-container">
+        <div className="category-tabs">
+          {categories.map(cat => (
+            <button
+              key={cat}
+              className={`tab-btn ${categoryFilter === cat ? 'active' : ''}`}
+              onClick={() => setCategoryFilter(cat)}
+            >
+              {cat}
+            </button>
+          ))}
         </div>
+        <button
+          className="export-btn"
+          onClick={handleExport}
+        >
+          ⬇️ Export
+        </button>
       </div>
 
       {/* Search & Filter Section */}
@@ -193,18 +311,6 @@ const RegisteredProducts = () => {
             onChange={(e) => setSearchTerm(e.target.value)}
           />
           <button>🔍</button>
-        </div>
-        
-        <div className="filter-group">
-          <label>Category:</label>
-          <select
-            value={categoryFilter}
-            onChange={(e) => setCategoryFilter(e.target.value)}
-          >
-            {categories.map(cat => (
-              <option key={cat} value={cat}>{cat}</option>
-            ))}
-          </select>
         </div>
         
         <div className="filter-group">
@@ -227,8 +333,6 @@ const RegisteredProducts = () => {
           >
             <option value="name-asc">Name (A-Z)</option>
             <option value="name-desc">Name (Z-A)</option>
-            <option value="price-asc">Price (Low to High)</option>
-            <option value="price-desc">Price (High to Low)</option>
             <option value="newest">Newest First</option>
             <option value="oldest">Oldest First</option>
           </select>
@@ -237,86 +341,86 @@ const RegisteredProducts = () => {
 
       {/* Product Table */}
       <div className="products-table-container">
-        {isLoading ? (
-          <div className="loading">Loading products...</div>
-        ) : (
-          <table className="products-table">
-            <thead>
-              <tr>
-                <th>
-                  <input
-                    type="checkbox"
-                    checked={selectedProducts.length === currentItems.length && currentItems.length > 0}
-                    onChange={toggleSelectAll}
-                  />
-                </th>
-                <th>Image</th>
-                <th>Product Name</th>
-                <th>Barcode No.</th>
-                <th>Category</th>
-                <th>Metal</th>
-                <th>Price</th>
-                <th>Stock</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {currentItems.length > 0 ? (
-                currentItems.map(product => (
-                  <tr 
-                    key={product.id} 
-                    className={product.stock < 5 ? 'low-stock' : ''}
-                  >
-                    <td>
-                      <input
-                        type="checkbox"
-                        checked={selectedProducts.includes(product.id)}
-                        onChange={() => toggleProductSelection(product.id)}
-                      />
-                    </td>
-                    <td>
-                      <img 
-                        src={product.image} 
-                        alt={product.name} 
-                        className="product-image"
-                      />
-                    </td>
-                    <td>{product.name}</td>
-                    <td>{product.barcode}</td>
-                    <td>{product.category}</td>
-                    <td>{product.metalType} {product.purity}</td>
-                    <td>₹{product.price.toLocaleString()}</td>
-                    <td>
-                      <span className={`stock-badge ${product.stock === 0 ? 'out-stock' : ''}`}>
-                        {product.stock} pcs
-                      </span>
-                    </td>
-                    <td>
-                      <button 
-                        className="edit-btn"
-                        onClick={() => handleEdit(product)}
-                      >
-                        Edit
-                      </button>
-                      <button 
-                        className="delete-btn"
-                        onClick={() => handleDelete(product.id)}
-                      >
-                        Delete
-                      </button>
-                    </td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan="9" className="no-products">
-                    {products.length === 0 ? 'No products registered yet' : 'No products found matching your criteria'}
+        <table className="products-table">
+          <thead>
+            <tr>
+              <th>
+                <input
+                  type="checkbox"
+                  checked={selectedProducts.length === currentItems.length && currentItems.length > 0}
+                  onChange={toggleSelectAll}
+                />
+              </th>
+              <th>Image</th>
+              <th>Product Name</th>
+              <th>Barcode No.</th>
+              <th>Category</th>
+              <th>Weight</th>
+              <th>Stock</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {currentItems.length > 0 ? (
+              currentItems.map(product => (
+                <tr 
+                  key={product.id} 
+                  className={product.stock < 5 ? 'low-stock' : ''}
+                >
+                  <td>
+                    <input
+                      type="checkbox"
+                      checked={selectedProducts.includes(product.id)}
+                      onChange={() => toggleProductSelection(product.id)}
+                    />
+                  </td>
+                  <td>
+                    <img 
+                      src={product.images && product.images.length > 0 ? product.images[0] : 'https://via.placeholder.com/80'} 
+                      alt={product.name} 
+                      className="product-image"
+                    />
+                  </td>
+                  <td>{product.name}</td>
+                  <td>{product.barcode}</td>
+                  <td>{product.category}</td>
+                  <td>
+                    {product.category === 'Gold' || product.category === 'Silver' ? (
+                      `${product.weight || 0} grams`
+                    ) : (
+                      'N/A'
+                    )}
+                  </td>
+                  <td>
+                    <span className={`stock-badge ${product.stock === 0 ? 'out-stock' : ''}`}>
+                      {product.stock} pcs
+                    </span>
+                  </td>
+                  <td>
+                    <button 
+                      className="edit-btn"
+                      onClick={() => setEditingProduct(product)}
+                    >
+                      Edit
+                    </button>
+                    <button 
+                      className="delete-btn"
+                      onClick={() => handleDelete(product.id)}
+                    >
+                      Delete
+                    </button>
                   </td>
                 </tr>
-              )}
-            </tbody>
-          </table>
-        )}
+              ))
+            ) : (
+              <tr>
+                <td colSpan="8" className="no-products">
+                  {products.length === 0 ? 'No products registered yet' : 'No products found matching your criteria'}
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
       </div>
 
       {/* Bulk Actions & Pagination */}
@@ -393,7 +497,7 @@ const RegisteredProducts = () => {
       {editingProduct && (
         <div className="modal-overlay">
           <div className="edit-modal">
-            <h3>{editingProduct.id ? 'Edit Product' : 'Add New Product'}</h3>
+            <h3>Edit Product</h3>
             <div className="edit-form">
               <div className="form-group">
                 <label>Product Name</label>
@@ -429,46 +533,27 @@ const RegisteredProducts = () => {
                 </div>
               </div>
               
-              <div className="form-row">
+              <div className="form-group">
+                <label>Barcode</label>
+                <input
+                  type="text"
+                  value={editingProduct.barcode}
+                  onChange={(e) => setEditingProduct({...editingProduct, barcode: e.target.value})}
+                />
+              </div>
+              
+              {(editingProduct.category === 'Gold' || editingProduct.category === 'Silver') && (
                 <div className="form-group">
-                  <label>Price (₹)</label>
+                  <label>Weight (grams)</label>
                   <input
                     type="number"
-                    value={editingProduct.price}
-                    onChange={(e) => setEditingProduct({...editingProduct, price: parseInt(e.target.value) || 0})}
+                    value={editingProduct.weight}
+                    onChange={(e) => setEditingProduct({...editingProduct, weight: parseFloat(e.target.value) || 0})}
+                    step="0.01"
                     min="0"
                   />
                 </div>
-                
-                <div className="form-group">
-                  <label>Barcode</label>
-                  <input
-                    type="text"
-                    value={editingProduct.barcode}
-                    onChange={(e) => setEditingProduct({...editingProduct, barcode: e.target.value})}
-                  />
-                </div>
-              </div>
-              
-              <div className="form-row">
-                <div className="form-group">
-                  <label>Metal Type</label>
-                  <input
-                    type="text"
-                    value={editingProduct.metalType}
-                    onChange={(e) => setEditingProduct({...editingProduct, metalType: e.target.value})}
-                  />
-                </div>
-                
-                <div className="form-group">
-                  <label>Purity</label>
-                  <input
-                    type="text"
-                    value={editingProduct.purity}
-                    onChange={(e) => setEditingProduct({...editingProduct, purity: e.target.value})}
-                  />
-                </div>
-              </div>
+              )}
               
               <div className="modal-actions">
                 <button 
@@ -479,9 +564,21 @@ const RegisteredProducts = () => {
                 </button>
                 <button 
                   className="save-btn"
-                  onClick={() => saveEditedProduct(editingProduct)}
+                  onClick={() => {
+                    saveEditedProduct(editingProduct);
+                    toast.success('Product updated successfully!', {
+                      position: "top-right",
+                      autoClose: 3000,
+                      hideProgressBar: false,
+                      closeOnClick: true,
+                      pauseOnHover: true,
+                      draggable: true,
+                      progress: undefined,
+                      theme: "colored",
+                    });
+                  }}
                 >
-                  {editingProduct.id ? 'Save Changes' : 'Add Product'}
+                  Save Changes
                 </button>
               </div>
             </div>

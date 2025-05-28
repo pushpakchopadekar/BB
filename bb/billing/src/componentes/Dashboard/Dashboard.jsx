@@ -521,9 +521,7 @@ const Dashboard = ({ onLogout }) => {
       <div className={`sidebar ${sidebarOpen ? 'open' : 'closed'} fixed-sidebar`}>
         <div className="sidebar-header">
           <h2>Jewellery Billing</h2>
-          <button className="sidebar-toggle" onClick={toggleSidebar}>
-            {sidebarOpen ? '◄' : '►'}
-          </button>
+         
         </div>
         
         <ul className="sidebar-menu">
@@ -565,9 +563,7 @@ const Dashboard = ({ onLogout }) => {
   </li>
         </ul>
         
-        <div className="sidebar-footer">
-         
-        </div>
+       
       </div>
       
       {/* Main Content Area */}

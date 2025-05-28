@@ -4,6 +4,8 @@ import { CSVLink } from 'react-csv';
 import { jsPDF } from 'jspdf';
 import 'jspdf-autotable';
 import html2canvas from 'html2canvas';
+import { database } from '../../firebase';
+import { ref, onValue, off } from 'firebase/database';
 import './SalesHistory.css';
 
 // Toast function
@@ -30,177 +32,8 @@ const showToast = (message, type = 'success') => {
 };
 
 const SalesHistory = () => {
-  // Dummy data with various categories
-  const [salesData] = useState([
-    {
-      id: 'INV-1001',
-      date: '2023-06-15',
-      customer: 'Rahul Sharma',
-      phone: '9876543210',
-      totalAmount: 78500,
-      paymentMode: 'UPI',
-      status: 'Paid',
-      category: 'Gold',
-      items: [
-        { 
-          id: 1,
-          name: 'Gold Necklace 22K', 
-          weight: 12.5, 
-          rate: 5830, 
-          makingCharge: 15, 
-          gst: 3, 
-          quantity: 1 
-        }
-      ]
-    },
-    {
-      id: 'INV-1002',
-      date: '2023-06-14',
-      customer: 'Priya Patel',
-      phone: '8765432109',
-      totalAmount: 12500,
-      paymentMode: 'Card',
-      status: 'Paid',
-      category: 'Silver',
-      items: [
-        { 
-          id: 2,
-          name: 'Silver Bracelet', 
-          weight: 28, 
-          rate: 72.5, 
-          makingCharge: 10, 
-          gst: 0, 
-          quantity: 1 
-        }
-      ]
-    },
-    {
-      id: 'INV-1003',
-      date: '2023-06-13',
-      customer: 'Amit Singh',
-      phone: '7654321098',
-      totalAmount: 3500,
-      paymentMode: 'Cash',
-      status: 'Pending',
-      category: 'Imitations',
-      items: [
-        { 
-          id: 3,
-          name: 'Imitation Pearl Set', 
-          weight: 0, 
-          rate: 3500, 
-          makingCharge: 0, 
-          gst: 18, 
-          quantity: 1 
-        }
-      ]
-    },
-    {
-      id: 'INV-1004',
-      date: '2023-06-12',
-      customer: 'Neha Gupta',
-      phone: '6543210987',
-      totalAmount: 45200,
-      paymentMode: 'UPI',
-      status: 'Paid',
-      category: 'Gold',
-      items: [
-        { 
-          id: 4,
-          name: 'Gold Bangles 18K', 
-          weight: 8.2, 
-          rate: 4750, 
-          makingCharge: 500, 
-          gst: 3, 
-          quantity: 2 
-        }
-      ]
-    },
-    {
-      id: 'INV-1005',
-      date: '2023-06-11',
-      customer: 'Vikram Joshi',
-      phone: '5432109876',
-      totalAmount: 8500,
-      paymentMode: 'Card',
-      status: 'Paid',
-      category: 'Silver',
-      items: [
-        { 
-          id: 5,
-          name: 'Silver Chain', 
-          weight: 15, 
-          rate: 72.5, 
-          makingCharge: 12, 
-          gst: 0, 
-          quantity: 1 
-        }
-      ]
-    },
-    {
-      id: 'INV-1006',
-      date: '2023-06-10',
-      customer: 'Ananya Reddy',
-      phone: '4321098765',
-      totalAmount: 2800,
-      paymentMode: 'Cash',
-      status: 'Paid',
-      category: 'Imitations',
-      items: [
-        { 
-          id: 6,
-          name: 'Fashion Ring', 
-          weight: 0, 
-          rate: 2800, 
-          makingCharge: 0, 
-          gst: 18, 
-          quantity: 1 
-        }
-      ]
-    },
-    {
-      id: 'INV-1007',
-      date: '2023-06-09',
-      customer: 'Rajesh Kumar',
-      phone: '3210987654',
-      totalAmount: 62500,
-      paymentMode: 'UPI',
-      status: 'Paid',
-      category: 'Gold',
-      items: [
-        { 
-          id: 7,
-          name: 'Gold Earrings 22K', 
-          weight: 5.5, 
-          rate: 5830, 
-          makingCharge: 800, 
-          gst: 3, 
-          quantity: 1 
-        }
-      ]
-    },
-    {
-      id: 'INV-1008',
-      date: '2023-06-08',
-      customer: 'Sneha Iyer',
-      phone: '2109876543',
-      totalAmount: 9500,
-      paymentMode: 'Card',
-      status: 'Pending',
-      category: 'Silver',
-      items: [
-        { 
-          id: 8,
-          name: 'Silver Anklet', 
-          weight: 22, 
-          rate: 72.5, 
-          makingCharge: 8, 
-          gst: 0, 
-          quantity: 1 
-        }
-      ]
-    }
-  ]);
+  const [salesData, setSalesData] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   // State for filters and modal
   const [filters, setFilters] = useState({
@@ -213,19 +46,54 @@ const SalesHistory = () => {
 
   const [selectedInvoice, setSelectedInvoice] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
 
-  // Initialize Toastify
+  // Fetch sales data from Firebase
   useEffect(() => {
+    const salesRef = ref(database, 'sales');
+    
+    const fetchSalesData = () => {
+      onValue(salesRef, (snapshot) => {
+        const data = snapshot.val();
+        if (data) {
+          // Convert object to array
+          const salesArray = Object.keys(data).map(key => ({
+            id: key,
+            ...data[key],
+            // Ensure we have all required fields with defaults
+            date: data[key].date || new Date().toISOString().split('T')[0],
+            customer: data[key].customer?.name || 'Anonymous Customer',
+            phone: data[key].customer?.phone || 'N/A',
+            totalAmount: data[key].summary?.finalTotal || 0,
+            paymentMode: data[key].summary?.paymentMode || 'Cash',
+            status: data[key].summary?.status || 'Paid',
+            category: data[key].items?.[0]?.metalType || 'Uncategorized',
+            items: data[key].items || []
+          }));
+          
+          setSalesData(salesArray);
+          showToast('Sales data loaded successfully!', 'success');
+        } else {
+          setSalesData([]);
+          showToast('No sales data found', 'info');
+        }
+        setLoading(false);
+      }, (error) => {
+        console.error('Error fetching sales data:', error);
+        showToast('Failed to load sales data', 'error');
+        setLoading(false);
+      });
+    };
+
+    fetchSalesData();
+
+    // Initialize Toastify
     const script = document.createElement('script');
     script.src = 'https://cdn.jsdelivr.net/npm/toastify-js';
-    script.onload = () => {
-      setIsLoading(false);
-      showToast('Sales history loaded successfully!', 'success');
-    };
     document.body.appendChild(script);
 
+    // Cleanup function
     return () => {
+      off(salesRef);
       document.body.removeChild(script);
     };
   }, []);
@@ -378,9 +246,13 @@ const SalesHistory = () => {
   // Handlers with useCallback
   const handleViewInvoice = useCallback((invoiceId) => {
     const invoice = salesData.find(sale => sale.id === invoiceId);
-    setSelectedInvoice(invoice);
-    setIsModalOpen(true);
-    showToast(`Invoice ${invoiceId} details opened`, 'info');
+    if (invoice) {
+      setSelectedInvoice(invoice);
+      setIsModalOpen(true);
+      showToast(`Invoice ${invoiceId} details opened`, 'info');
+    } else {
+      showToast('Invoice not found', 'error');
+    }
   }, [salesData]);
 
   const handleFilterChange = useCallback((e) => {
@@ -400,102 +272,123 @@ const SalesHistory = () => {
 
   // Export single invoice as PDF
   const exportSinglePDF = useCallback((invoice) => {
-    const doc = new jsPDF();
-    
-    // Add business info
-    doc.setFontSize(18);
-    doc.text('Mere Jewellery', 105, 15, { align: 'center' });
-    doc.setFontSize(12);
-    doc.text('123 Jewellery Street, Mumbai - 400001', 105, 22, { align: 'center' });
-    doc.text('GSTIN: GSTIN123456789', 105, 29, { align: 'center' });
-    
-    // Add invoice header
-    doc.setFontSize(16);
-    doc.text(`INVOICE: ${invoice.id}`, 105, 40, { align: 'center' });
-    doc.setFontSize(10);
-    doc.text(`Date: ${new Date(invoice.date).toLocaleDateString()}`, 105, 47, { align: 'center' });
-    
-    // Add customer info
-    doc.setFontSize(12);
-    doc.text(`Customer: ${invoice.customer}`, 20, 60);
-    doc.text(`Phone: ${invoice.phone}`, 20, 67);
-    doc.text(`Category: ${invoice.category}`, 20, 74);
-    
-    // Add items table
-    doc.autoTable({
-      startY: 85,
-      head: [['Item', 'Weight (g)', 'Rate', 'Making', 'GST %', 'Qty', 'Amount']],
-      body: invoice.items.map(item => [
-        item.name,
-        item.weight > 0 ? item.weight.toFixed(2) : 'N/A',
-        `₹${item.rate.toFixed(2)}`,
-        item.makingCharge > 0 ? (item.makingCharge + (typeof item.makingCharge === 'number' ? '₹' : '%')) : 'N/A',
-        `${item.gst}%`,
-        item.quantity,
-        `₹${(item.rate * item.quantity).toFixed(2)}`
-      ]),
-      styles: { fontSize: 10 },
-      headStyles: { fillColor: [212, 175, 55] } // Gold color
-    });
-    
-    // Add totals
-    const finalY = doc.lastAutoTable.finalY + 10;
-    doc.setFontSize(12);
-    doc.text(`Total Amount: ₹${invoice.totalAmount.toLocaleString()}`, 20, finalY);
-    doc.text(`Payment Mode: ${invoice.paymentMode}`, 20, finalY + 7);
-    doc.text(`Status: ${invoice.status}`, 20, finalY + 14);
-    
-    // Save the PDF
-    doc.save(`Invoice_${invoice.id}.pdf`);
-    showToast(`PDF for ${invoice.id} downloaded`, 'success');
+    try {
+      const doc = new jsPDF();
+      
+      // Add business info
+      doc.setFontSize(18);
+      doc.text('Mere Jewellery', 105, 15, { align: 'center' });
+      doc.setFontSize(12);
+      doc.text('123 Jewellery Street, Mumbai - 400001', 105, 22, { align: 'center' });
+      doc.text('GSTIN: GSTIN123456789', 105, 29, { align: 'center' });
+      
+      // Add invoice header
+      doc.setFontSize(16);
+      doc.text(`INVOICE: ${invoice.id}`, 105, 40, { align: 'center' });
+      doc.setFontSize(10);
+      doc.text(`Date: ${new Date(invoice.date).toLocaleDateString()}`, 105, 47, { align: 'center' });
+      
+      // Add customer info
+      doc.setFontSize(12);
+      doc.text(`Customer: ${invoice.customer}`, 20, 60);
+      doc.text(`Phone: ${invoice.phone}`, 20, 67);
+      doc.text(`Category: ${invoice.category}`, 20, 74);
+      
+      // Add items table
+      doc.autoTable({
+        startY: 85,
+        head: [['Item', 'Weight (g)', 'Rate', 'Making', 'GST %', 'Qty', 'Amount']],
+        body: invoice.items.map(item => [
+          item.productName || item.name || 'Unnamed Product',
+          item.weight > 0 ? item.weight.toFixed(2) : 'N/A',
+          `₹${item.currentRate?.toFixed(2) || item.rate?.toFixed(2) || '0.00'}`,
+          item.makingCharge > 0 ? (item.makingCharge + (typeof item.makingCharge === 'number' ? '₹' : '%')) : 'N/A',
+          `${item.gst || 0}%`,
+          item.quantity || 1,
+          `₹${(item.totalPrice || (item.quantity * (item.currentRate || item.rate || 0))).toFixed(2)}`
+        ]),
+        styles: { fontSize: 10 },
+        headStyles: { fillColor: [212, 175, 55] } // Gold color
+      });
+      
+      // Add totals
+      const finalY = doc.lastAutoTable.finalY + 10;
+      doc.setFontSize(12);
+      doc.text(`Total Amount: ₹${invoice.totalAmount?.toLocaleString() || '0'}`, 20, finalY);
+      doc.text(`Payment Mode: ${invoice.paymentMode}`, 20, finalY + 7);
+      doc.text(`Status: ${invoice.status}`, 20, finalY + 14);
+      
+      // Save the PDF
+      doc.save(`Invoice_${invoice.id}.pdf`);
+      showToast(`PDF for ${invoice.id} downloaded`, 'success');
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      showToast('Failed to generate PDF', 'error');
+    }
   }, []);
 
   // Export all filtered data as PDF
   const exportAllPDF = useCallback(() => {
-    const doc = new jsPDF();
-    
-    // Add title
-    doc.setFontSize(18);
-    doc.text('Sales History Report - Mere Jewellery', 105, 15, { align: 'center' });
-    doc.setFontSize(12);
-    doc.text(`From: ${filters.startDate || 'Beginning'} To: ${filters.endDate || 'Today'}`, 105, 22, { align: 'center' });
-    doc.text(`Category: ${filters.categoryFilter === 'All' ? 'All Categories' : filters.categoryFilter}`, 105, 29, { align: 'center' });
-    
-    // Add table
-    doc.autoTable({
-      startY: 40,
-      head: [['Invoice No', 'Date', 'Customer', 'Category', 'Amount (₹)', 'Payment', 'Status']],
-      body: filteredData.map(sale => [
-        sale.id,
-        new Date(sale.date).toLocaleDateString(),
-        sale.customer,
-        sale.category,
-        sale.totalAmount.toLocaleString(),
-        sale.paymentMode,
-        sale.status
-      ]),
-      styles: { fontSize: 10 },
-      headStyles: { fillColor: [212, 175, 55] } // Gold color
-    });
-    
-    // Save the PDF
-    doc.save('Sales_History.pdf');
-    showToast('All sales exported to PDF', 'success');
+    try {
+      const doc = new jsPDF();
+      
+      // Add title
+      doc.setFontSize(18);
+      doc.text('Sales History Report - Mere Jewellery', 105, 15, { align: 'center' });
+      doc.setFontSize(12);
+      doc.text(`From: ${filters.startDate || 'Beginning'} To: ${filters.endDate || 'Today'}`, 105, 22, { align: 'center' });
+      doc.text(`Category: ${filters.categoryFilter === 'All' ? 'All Categories' : filters.categoryFilter}`, 105, 29, { align: 'center' });
+      
+      // Add table
+      doc.autoTable({
+        startY: 40,
+        head: [['Invoice No', 'Date', 'Customer', 'Category', 'Amount (₹)', 'Payment', 'Status']],
+        body: filteredData.map(sale => [
+          sale.id,
+          new Date(sale.date).toLocaleDateString(),
+          sale.customer,
+          sale.category,
+          sale.totalAmount.toLocaleString(),
+          sale.paymentMode,
+          sale.status
+        ]),
+        styles: { fontSize: 10 },
+        headStyles: { fillColor: [212, 175, 55] } // Gold color
+      });
+      
+      // Save the PDF
+      doc.save('Sales_History.pdf');
+      showToast('All sales exported to PDF', 'success');
+    } catch (error) {
+      console.error('Error exporting all PDFs:', error);
+      showToast('Failed to export all PDFs', 'error');
+    }
   }, [filteredData, filters]);
 
   // Print invoice
   const printInvoice = useCallback(() => {
-    const input = document.getElementById('invoice-to-print');
-    html2canvas(input, { scale: 2 }).then(canvas => {
-      const imgData = canvas.toDataURL('image/png');
-      const printWindow = window.open('', '_blank');
-      printWindow.document.write(`<img src="${imgData}" onload="window.print();window.close()" />`);
-      printWindow.document.close();
-    });
-    showToast('Invoice sent to printer', 'info');
+    try {
+      const input = document.getElementById('invoice-to-print');
+      html2canvas(input, { scale: 2 }).then(canvas => {
+        const imgData = canvas.toDataURL('image/png');
+        const printWindow = window.open('', '_blank');
+        printWindow.document.write(`<img src="${imgData}" onload="window.print();window.close()" />`);
+        printWindow.document.close();
+      });
+      showToast('Invoice sent to printer', 'info');
+    } catch (error) {
+      console.error('Error printing invoice:', error);
+      showToast('Failed to print invoice', 'error');
+    }
   }, []);
 
-  if (isLoading) {
+  // Get unique categories from sales data
+  const categories = useMemo(() => {
+    const allCategories = ['All', ...new Set(salesData.map(sale => sale.category))];
+    return allCategories.filter(cat => cat && cat !== 'All');
+  }, [salesData]);
+
+  if (loading) {
     return <div className="loading-container">Loading sales data...</div>;
   }
 
@@ -581,24 +474,15 @@ const SalesHistory = () => {
         >
           All
         </button>
-        <button 
-          className={`tab-btn ${filters.categoryFilter === 'Gold' ? 'active' : ''}`}
-          onClick={() => handleCategoryChange('Gold')}
-        >
-          Gold
-        </button>
-        <button 
-          className={`tab-btn ${filters.categoryFilter === 'Silver' ? 'active' : ''}`}
-          onClick={() => handleCategoryChange('Silver')}
-        >
-          Silver
-        </button>
-        <button 
-          className={`tab-btn ${filters.categoryFilter === 'Imitations' ? 'active' : ''}`}
-          onClick={() => handleCategoryChange('Imitations')}
-        >
-          Imitations
-        </button>
+        {categories.map(category => (
+          <button 
+            key={category}
+            className={`tab-btn ${filters.categoryFilter === category ? 'active' : ''}`}
+            onClick={() => handleCategoryChange(category)}
+          >
+            {category}
+          </button>
+        ))}
       </div>
       
       {/* Sales Table */}
@@ -732,15 +616,15 @@ const SalesHistory = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {selectedInvoice.items.map((item) => (
-                      <tr key={item.id}>
-                        <td>{item.name}</td>
+                    {selectedInvoice.items.map((item, index) => (
+                      <tr key={index}>
+                        <td>{item.productName || item.name || `Item ${index + 1}`}</td>
                         <td>{item.weight > 0 ? item.weight.toFixed(2) : 'N/A'}</td>
-                        <td>₹{item.rate.toFixed(2)}</td>
+                        <td>₹{item.currentRate?.toFixed(2) || item.rate?.toFixed(2) || '0.00'}</td>
                         <td>{item.makingCharge > 0 ? (item.makingCharge + (typeof item.makingCharge === 'number' ? '₹' : '%')) : 'N/A'}</td>
-                        <td>{item.gst}%</td>
-                        <td>{item.quantity}</td>
-                        <td>₹{(item.rate * item.quantity).toFixed(2)}</td>
+                        <td>{item.gst || 0}%</td>
+                        <td>{item.quantity || 1}</td>
+                        <td>₹{(item.totalPrice || (item.quantity * (item.currentRate || item.rate || 0))).toFixed(2)}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -748,8 +632,22 @@ const SalesHistory = () => {
                 
                 <div className="invoice-totals">
                   <div className="total-row">
+                    <span>Subtotal:</span>
+                    <span>₹{selectedInvoice.summary?.subtotal?.toLocaleString() || selectedInvoice.totalAmount?.toLocaleString() || '0'}</span>
+                  </div>
+                  {selectedInvoice.summary?.discount > 0 && (
+                    <div className="total-row">
+                      <span>Discount:</span>
+                      <span>-₹{selectedInvoice.summary.discount.toLocaleString()}</span>
+                    </div>
+                  )}
+                  <div className="total-row">
+                    <span>GST:</span>
+                    <span>₹{selectedInvoice.summary?.gstAmount?.toLocaleString() || '0'}</span>
+                  </div>
+                  <div className="total-row grand-total">
                     <span>Total Amount:</span>
-                    <span>₹{selectedInvoice.totalAmount.toLocaleString()}</span>
+                    <span>₹{selectedInvoice.totalAmount?.toLocaleString() || '0'}</span>
                   </div>
                   <div className="total-row">
                     <span>Payment Mode:</span>

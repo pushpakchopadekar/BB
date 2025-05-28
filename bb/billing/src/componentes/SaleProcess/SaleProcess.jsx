@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import '../SaleProcess/SaleProcess.css';
+import { database } from '../../firebase';
+import { ref, onValue, off } from 'firebase/database';
 
 const StartSale = ({ goldRate, silverRate }) => {
   // Customer state
@@ -13,6 +15,7 @@ const StartSale = ({ goldRate, silverRate }) => {
 
   // Product cart state
   const [cart, setCart] = useState([]);
+  const [showCartPopup, setShowCartPopup] = useState(false);
 
   // Summary state
   const [summary, setSummary] = useState({
@@ -27,8 +30,8 @@ const StartSale = ({ goldRate, silverRate }) => {
     paymentMode: 'Cash',
     advancePayment: 0,
     deliveryDate: '',
-    invoiceDate: new Date().toISOString().split('T')[0], // Current date as default
-    invoiceMonth: new Date().toLocaleString('default', { month: 'long' }) // Current month as default
+    invoiceDate: new Date().toISOString().split('T')[0],
+    invoiceMonth: new Date().toLocaleString('default', { month: 'long' })
   });
 
   // Product form state
@@ -36,49 +39,50 @@ const StartSale = ({ goldRate, silverRate }) => {
     barcode: '',
     productId: '',
     productName: '',
-    metalType: 'Gold',
-    purity: '22K',
+    category: 'Gold',
     weight: '',
     currentRate: goldRate,
     makingCharge: '',
+    makingChargeType: 'percentage',
     gst: 3,
     totalPrice: 0
   });
+
+  // Products from Firebase
+  const [products, setProducts] = useState([]);
+  const [loadingProducts, setLoadingProducts] = useState(true);
+
   const barcodeInputRef = useRef(null);
 
-  // Sample product database (in real app, fetch from API)
-  const [products] = useState([
-    { 
-      id: 1, 
-      name: "Gold Chain 22K", 
-      metalType: "Gold", 
-      purity: "22K", 
-      weight: 8.5, 
-      makingCharge: 15, 
-      barcode: "8901234567890",
-      image: "https://example.com/gold-chain.jpg"
-    },
-    { 
-      id: 2, 
-      name: "Gold Ring 18K", 
-      metalType: "Gold", 
-      purity: "18K", 
-      weight: 3.2, 
-      makingCharge: 1200, 
-      barcode: "8901234567891",
-      image: "https://example.com/gold-ring.jpg"
-    },
-    { 
-      id: 3, 
-      name: "Silver Bracelet", 
-      metalType: "Silver", 
-      purity: "92.5 Sterling Silver", 
-      weight: 25, 
-      makingCharge: 10, 
-      barcode: "8901234567892",
-      image: "https://example.com/silver-bracelet.jpg"
-    }
-  ]);
+  // Fetch products from Firebase on component mount
+  useEffect(() => {
+    const productsRef = ref(database, 'products');
+    
+    const fetchProducts = () => {
+      onValue(productsRef, (snapshot) => {
+        const data = snapshot.val();
+        if (data) {
+          const productsArray = Object.keys(data).map(key => ({
+            id: key,
+            ...data[key]
+          }));
+          setProducts(productsArray);
+        } else {
+          setProducts([]);
+        }
+        setLoadingProducts(false);
+      }, (error) => {
+        console.error('Error fetching products:', error);
+        setLoadingProducts(false);
+      });
+    };
+
+    fetchProducts();
+
+    return () => {
+      off(productsRef);
+    };
+  }, []);
 
   // Calculate totals whenever cart changes
   useEffect(() => {
@@ -104,14 +108,14 @@ const StartSale = ({ goldRate, silverRate }) => {
       const updatedForm = { 
         ...prev, 
         [name]: value,
-        // Update current rate when metal type changes
-        currentRate: name === 'metalType' ? 
-          (value === 'Gold' ? goldRate : silverRate) : 
+        currentRate: name === 'category' ? 
+          (value === 'Gold' ? goldRate : 
+           value === 'Silver' ? silverRate : 
+           0) : 
           prev.currentRate
       };
       
-      // Recalculate price when relevant fields change
-      if (['metalType', 'purity', 'weight', 'currentRate', 'makingCharge'].includes(name)) {
+      if (['category', 'weight', 'currentRate', 'makingCharge', 'makingChargeType'].includes(name)) {
         updatedForm.totalPrice = calculateProductPrice(updatedForm);
       }
       
@@ -122,43 +126,31 @@ const StartSale = ({ goldRate, silverRate }) => {
   const calculateProductPrice = (product) => {
     if (!product.weight || isNaN(product.weight)) return 0;
 
-    // Calculate metal value based on purity
-    let ratePerGram = product.currentRate;
-    if (product.metalType === 'Gold') {
-      if (product.purity === '22K') ratePerGram = product.currentRate * 0.916;
-      else if (product.purity === '18K') ratePerGram = product.currentRate * 0.75;
-    } else { // Silver
-      if (product.purity === '92.5 Sterling Silver') ratePerGram = product.currentRate * 0.925;
-    }
-    
-    const metalValue = product.weight * ratePerGram;
+    if (product.category === 'Gold' || product.category === 'Silver') {
+      const metalValue = product.weight * product.currentRate;
 
-    // Calculate making charges (percentage or fixed)
-    let makingCharges = 0;
-    if (product.makingCharge && !isNaN(product.makingCharge)) {
-      if (product.makingCharge > 100) {
-        // Assume it's a fixed amount if making charge is > 100
-        makingCharges = parseFloat(product.makingCharge);
-      } else {
-        // Percentage based making charge
-        makingCharges = metalValue * (product.makingCharge / 100);
+      let makingCharges = 0;
+      if (product.makingCharge && !isNaN(product.makingCharge)) {
+        if (product.makingChargeType === 'fixed') {
+          makingCharges = parseFloat(product.makingCharge);
+        } else {
+          makingCharges = metalValue * (product.makingCharge / 100);
+        }
       }
+
+      const subtotal = metalValue + makingCharges;
+      const gstAmount = subtotal * (product.gst / 100);
+      return subtotal + gstAmount;
+    } else {
+      if (!product.makingCharge || isNaN(product.makingCharge)) return 0;
+      const price = parseFloat(product.makingCharge);
+      return price + (price * (product.gst / 100));
     }
-
-    // Calculate subtotal
-    const subtotal = metalValue + makingCharges;
-
-    // Calculate GST (fixed 3%)
-    const gstAmount = subtotal * (product.gst / 100);
-
-    // Calculate final price
-    return subtotal + gstAmount;
   };
 
   const calculateTotals = () => {
     const subtotal = cart.reduce((sum, item) => sum + item.totalPrice, 0);
     
-    // Calculate discount
     const discountAmount = summary.discountType === 'percentage'
       ? subtotal * (summary.discount / 100)
       : parseFloat(summary.discount);
@@ -183,21 +175,20 @@ const StartSale = ({ goldRate, silverRate }) => {
       const scannedProduct = products.find(p => p.barcode === productForm.barcode);
       
       if (scannedProduct) {
-        // Auto-fill the form with product details from inventory
         setProductForm({
           barcode: scannedProduct.barcode,
           productId: scannedProduct.id,
           productName: scannedProduct.name,
-          metalType: scannedProduct.metalType,
-          purity: scannedProduct.purity,
+          category: scannedProduct.category || 'Gold',
           weight: scannedProduct.weight,
-          currentRate: scannedProduct.metalType === 'Gold' ? goldRate : silverRate,
-          makingCharge: scannedProduct.makingCharge,
+          currentRate: scannedProduct.category === 'Gold' ? goldRate : 
+                      scannedProduct.category === 'Silver' ? silverRate : 0,
+          makingCharge: scannedProduct.makingCharge || '',
+          makingChargeType: scannedProduct.makingChargeType || 'percentage',
           gst: 3,
           totalPrice: 0
         });
         
-        // Recalculate price after auto-fill
         setTimeout(() => {
           setProductForm(prev => ({
             ...prev,
@@ -226,23 +217,16 @@ const StartSale = ({ goldRate, silverRate }) => {
       return;
     }
 
-    const productInCart = cart.find(item => item.productId === productForm.productId);
-    
-    if (productInCart) {
-      alert('This product is already in the sale!');
-      return;
-    }
-
     const productToAdd = {
-      id: Date.now(), // Unique ID for the sale item
+      id: Date.now(),
       productId: productForm.productId,
       barcode: productForm.barcode,
       productName: productForm.productName,
-      metalType: productForm.metalType,
-      purity: productForm.purity,
+      category: productForm.category,
       weight: parseFloat(productForm.weight),
       currentRate: parseFloat(productForm.currentRate),
       makingCharge: parseFloat(productForm.makingCharge),
+      makingChargeType: productForm.makingChargeType,
       gst: productForm.gst,
       totalPrice: parseFloat(productForm.totalPrice.toFixed(2)),
       image: products.find(p => p.id === productForm.productId)?.image || ''
@@ -257,16 +241,15 @@ const StartSale = ({ goldRate, silverRate }) => {
       barcode: '',
       productId: '',
       productName: '',
-      metalType: 'Gold',
-      purity: '22K',
+      category: 'Gold',
       weight: '',
       currentRate: goldRate,
       makingCharge: '',
+      makingChargeType: 'percentage',
       gst: 3,
       totalPrice: 0
     });
     
-    // Focus back on barcode input after reset
     if (barcodeInputRef.current) {
       barcodeInputRef.current.focus();
     }
@@ -286,7 +269,6 @@ const StartSale = ({ goldRate, silverRate }) => {
     setSummary(prev => ({
       ...prev,
       invoiceDate: value,
-      // Update month when date changes
       invoiceMonth: new Date(value).toLocaleString('default', { month: 'long' })
     }));
   };
@@ -307,16 +289,15 @@ const StartSale = ({ goldRate, silverRate }) => {
       return;
     }
 
-    // Prepare invoice data
     const invoiceData = {
       customer: {
         ...customer,
-        id: Date.now() // Generate customer ID
+        id: Date.now()
       },
       items: cart.map(item => ({
         ...item,
-        // Calculate detailed breakdown for each item
-        metalValue: calculateMetalValue(item),
+        metalValue: item.category === 'Gold' || item.category === 'Silver' ? 
+          item.weight * item.currentRate : 0,
         makingCharges: calculateMakingCharges(item),
         gstAmount: item.totalPrice - (item.totalPrice / (1 + (item.gst / 100)))
       })),
@@ -331,11 +312,9 @@ const StartSale = ({ goldRate, silverRate }) => {
       }
     };
 
-    // In a real app, you would send this to your backend or print it
     console.log('Invoice Data:', invoiceData);
     alert('Invoice generated successfully!');
     
-    // Reset the form for new sale
     setCustomer({
       name: '',
       phone: '',
@@ -356,34 +335,25 @@ const StartSale = ({ goldRate, silverRate }) => {
       paymentMode: 'Cash',
       advancePayment: 0,
       deliveryDate: '',
-      invoiceDate: new Date().toISOString().split('T')[0], // Reset to current date
-      invoiceMonth: new Date().toLocaleString('default', { month: 'long' }) // Reset to current month
+      invoiceDate: new Date().toISOString().split('T')[0],
+      invoiceMonth: new Date().toLocaleString('default', { month: 'long' })
     });
     resetProductForm();
   };
 
-  // Helper function to calculate metal value for an item
-  const calculateMetalValue = (item) => {
-    let ratePerGram = item.currentRate;
-    if (item.metalType === 'Gold') {
-      if (item.purity === '22K') ratePerGram = item.currentRate * 0.916;
-      else if (item.purity === '18K') ratePerGram = item.currentRate * 0.75;
-    } else { // Silver
-      if (item.purity === '92.5 Sterling Silver') ratePerGram = item.currentRate * 0.925;
-    }
-    return item.weight * ratePerGram;
-  };
-
-  // Helper function to calculate making charges for an item
   const calculateMakingCharges = (item) => {
-    const metalValue = calculateMetalValue(item);
-    if (item.makingCharge > 100) {
+    if (item.makingChargeType === 'fixed') {
       return parseFloat(item.makingCharge);
     }
-    return metalValue * (item.makingCharge / 100);
+    
+    if (item.category === 'Gold' || item.category === 'Silver') {
+      const metalValue = item.weight * item.currentRate;
+      return metalValue * (item.makingCharge / 100);
+    }
+    
+    return 0;
   };
 
-  // Get list of months for dropdown
   const months = [
     'January', 'February', 'March', 'April', 'May', 'June',
     'July', 'August', 'September', 'October', 'November', 'December'
@@ -439,65 +409,17 @@ const StartSale = ({ goldRate, silverRate }) => {
       <div className="product-section">
         <h3>Sale Products</h3>
         
-        {/* Products List */}
-        <div className="products-list">
-          {cart.length === 0 ? (
-            <div className="empty-cart">
-              <p>No products added to sale yet. Scan product barcode below.</p>
-            </div>
-          ) : (
-            <table className="product-table">
-              <thead>
-                <tr>
-                  <th>#</th>
-                  <th>Product</th>
-                  <th>Barcode</th>
-                  <th>Metal</th>
-                  <th>Purity</th>
-                  <th>Weight (g)</th>
-                  <th>Rate/g</th>
-                  <th>Making</th>
-                  <th>GST</th>
-                  <th>Total</th>
-                  <th>Action</th>
-                </tr>
-              </thead>
-              <tbody>
-                {cart.map((item, index) => (
-                  <tr key={item.id}>
-                    <td>{index + 1}</td>
-                    <td>{item.productName}</td>
-                    <td>{item.barcode}</td>
-                    <td>{item.metalType}</td>
-                    <td>{item.purity}</td>
-                    <td>{item.weight.toFixed(3)}g</td>
-                    <td>₹{item.currentRate.toFixed(2)}</td>
-                    <td>
-                      {item.makingCharge > 100 
-                        ? `₹${item.makingCharge.toFixed(2)}` 
-                        : `${item.makingCharge}%`}
-                    </td>
-                    <td>{item.gst}%</td>
-                    <td>₹{item.totalPrice.toFixed(2)}</td>
-                    <td>
-                      <button 
-                        className="remove-btn"
-                        onClick={() => removeProductFromCart(item.id)}
-                      >
-                        🗑
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
+        {/* Cart Button */}
+        <div className="cart-button-container">
+          <button 
+            className="view-cart-btn"
+            onClick={() => setShowCartPopup(true)}
+            disabled={cart.length === 0}
+          >
+            🛒 View Cart ({cart.length})
+          </button>
         </div>
         
-        <div className="product-actions">
-          <span className="product-count">{cart.length} items in sale</span>
-        </div>
-
         {/* Product Sale Form */}
         <div className="add-product-form">
           <h4>Scan Product</h4>
@@ -518,14 +440,14 @@ const StartSale = ({ goldRate, silverRate }) => {
                 <button 
                   className="scan-btn"
                   onClick={handleBarcodeScan}
+                  disabled={loadingProducts}
                 >
-                  🔍 Find Product
+                  {loadingProducts ? 'Loading Products...' : '🔍 Find Product'}
                 </button>
               </div>
             </div>
           </div>
           
-          {/* Show all product fields after scanning */}
           {productForm.productId && (
             <>
               <div className="form-row">
@@ -540,27 +462,21 @@ const StartSale = ({ goldRate, silverRate }) => {
                 </div>
                 
                 <div className="form-group">
-                  <label>Metal Type</label>
-                  <input
-                    type="text"
-                    name="metalType"
-                    value={productForm.metalType}
-                    readOnly
-                  />
+                  <label>Category</label>
+                  <select
+                    name="category"
+                    value={productForm.category}
+                    onChange={handleProductFormChange}
+                  >
+                    <option value="Gold">Gold</option>
+                    <option value="Silver">Silver</option>
+                    <option value="Imitation">Imitation</option>
+                    <option value="Other">Other</option>
+                  </select>
                 </div>
               </div>
               
               <div className="form-row">
-                <div className="form-group">
-                  <label>Purity</label>
-                  <input
-                    type="text"
-                    name="purity"
-                    value={productForm.purity}
-                    readOnly
-                  />
-                </div>
-                
                 <div className="form-group">
                   <label>Weight (g)</label>
                   <input
@@ -573,11 +489,12 @@ const StartSale = ({ goldRate, silverRate }) => {
                     required
                   />
                 </div>
-              </div>
-              
-              <div className="form-row">
+                
                 <div className="form-group">
-                  <label>Current Rate (₹/g)*</label>
+                  <label>
+                    {productForm.category === 'Gold' || productForm.category === 'Silver' ? 
+                      'Current Rate (₹/g)*' : 'Selling Price*'}
+                  </label>
                   <input
                     type="number"
                     name="currentRate"
@@ -588,31 +505,38 @@ const StartSale = ({ goldRate, silverRate }) => {
                     required
                   />
                   <small>
-                    {productForm.metalType === 'Gold' ? 
-                      `24K Gold Rate: ₹${goldRate.toFixed(2)}/g` : 
-                      `99.9% Silver Rate: ₹${silverRate.toFixed(2)}/g`}
-                  </small>
-                </div>
-                
-                <div className="form-group">
-                  <label>Making Charge*</label>
-                  <input
-                    type="number"
-                    name="makingCharge"
-                    value={productForm.makingCharge}
-                    onChange={handleProductFormChange}
-                    step="0.01"
-                    min="0"
-                    required
-                  />
-                  <small>
-                    {productForm.makingCharge > 100 ? 
-                      "Fixed amount (₹)" : "Percentage (%)"}
+                    {productForm.category === 'Gold' ? 
+                      `Gold Rate: ₹${goldRate.toFixed(2)}/g` : 
+                      productForm.category === 'Silver' ? 
+                      `Silver Rate: ₹${silverRate.toFixed(2)}/g` : ''}
                   </small>
                 </div>
               </div>
               
               <div className="form-row">
+                <div className="form-group">
+                  <label>Making Charge*</label>
+                  <div className="making-charge-group">
+                    <input
+                      type="number"
+                      name="makingCharge"
+                      value={productForm.makingCharge}
+                      onChange={handleProductFormChange}
+                      step="0.01"
+                      min="0"
+                      required
+                    />
+                    <select
+                      name="makingChargeType"
+                      value={productForm.makingChargeType}
+                      onChange={handleProductFormChange}
+                    >
+                      <option value="percentage">%</option>
+                      <option value="fixed">₹</option>
+                    </select>
+                  </div>
+                </div>
+                
                 <div className="form-group">
                   <label>GST (%)</label>
                   <input
@@ -622,7 +546,9 @@ const StartSale = ({ goldRate, silverRate }) => {
                     readOnly
                   />
                 </div>
-                
+              </div>
+              
+              <div className="form-row">
                 <div className="form-group">
                   <label>Calculated Price</label>
                   <input
@@ -644,7 +570,7 @@ const StartSale = ({ goldRate, silverRate }) => {
                   className="save-btn" 
                   onClick={addProductToSale}
                 >
-                  Add to Sale
+                  Add to Cart
                 </button>
               </div>
             </>
@@ -656,7 +582,6 @@ const StartSale = ({ goldRate, silverRate }) => {
       <div className="summary-sidebar">
         <h3>Invoice Summary</h3>
         
-        {/* Invoice Date and Month Fields */}
         <div className="form-row">
           <div className="form-group">
             <label>Invoice Date</label>
@@ -756,7 +681,6 @@ const StartSale = ({ goldRate, silverRate }) => {
           </div>
         </div>
 
-        {/* Action Buttons */}
         <div className="action-buttons">
           <button 
             className="invoice-btn" 
@@ -767,6 +691,94 @@ const StartSale = ({ goldRate, silverRate }) => {
           </button>
         </div>
       </div>
+
+      {/* Cart Popup Overlay */}
+      {showCartPopup && (
+        <div className="cart-popup-overlay">
+          <div className="cart-popup-content">
+            <div className="cart-popup-header">
+              <h3>Cart Items ({cart.length})</h3>
+              <button 
+                className="close-cart-btn"
+                onClick={() => setShowCartPopup(false)}
+              >
+                ×
+              </button>
+            </div>
+            
+            <div className="cart-items-container">
+              {cart.length === 0 ? (
+                <p className="empty-cart-message">Your cart is empty</p>
+              ) : (
+                <table className="cart-items-table">
+                  <thead>
+                    <tr>
+                      <th>#</th>
+                      <th>Product</th>
+                      <th>Category</th>
+                      <th>Weight</th>
+                      <th>Price</th>
+                      <th>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {cart.map((item, index) => (
+                      <tr key={item.id}>
+                        <td>{index + 1}</td>
+                        <td>{item.productName}</td>
+                        <td>{item.category}</td>
+                        <td>{item.weight.toFixed(3)}g</td>
+                        <td>₹{item.totalPrice.toFixed(2)}</td>
+                        <td>
+                          <button 
+                            className="remove-item-btn"
+                            onClick={() => removeProductFromCart(item.id)}
+                          >
+                            Remove
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+            
+            <div className="cart-summary">
+              <div className="summary-row">
+                <span>Subtotal:</span>
+                <span>₹{summary.subtotal.toFixed(2)}</span>
+              </div>
+              <div className="summary-row">
+                <span>GST (3%):</span>
+                <span>₹{summary.gstAmount.toFixed(2)}</span>
+              </div>
+              <div className="summary-row total">
+                <span>Total:</span>
+                <span>₹{summary.total.toFixed(2)}</span>
+              </div>
+            </div>
+            
+            <div className="cart-popup-actions">
+              <button 
+                className="continue-shopping-btn"
+                onClick={() => setShowCartPopup(false)}
+              >
+                Continue Shopping
+              </button>
+              <button 
+                className="checkout-btn"
+                onClick={() => {
+                  setShowCartPopup(false);
+                  // Optional: Scroll to invoice section
+                }}
+              >
+                Proceed to Checkout
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

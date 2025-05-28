@@ -6,7 +6,7 @@ import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   sendPasswordResetEmail
-} from '../../Firebase';
+} from '../../firebase';
 import { ref, set, get } from 'firebase/database';
 
 const Login = ({ onLogin }) => {

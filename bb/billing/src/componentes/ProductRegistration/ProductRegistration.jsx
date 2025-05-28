@@ -3,6 +3,8 @@ import JsBarcode from 'jsbarcode';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import '../ProductRegistration/ProductRegistration.css';
+import { database } from '../../firebase';
+import { ref, push, set } from 'firebase/database';
 
 const ProductRegistration = () => {
   const [product, setProduct] = useState({
@@ -188,15 +190,31 @@ const ProductRegistration = () => {
 
     setIsSubmitting(true);
     
-    // Simulate API call
     try {
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // Create a new product reference with a unique key
+      const productsRef = ref(database, 'products');
+      const newProductRef = push(productsRef);
       
-      console.log('Product submitted:', {
-        ...product,
-        barcode
-      });
+      // Prepare product data for Firebase
+      const productData = {
+        id: newProductRef.key,
+        name: product.name,
+        category: product.category,
+        weight: product.weight,
+        purchasePrice: product.purchasePrice,
+        sellingPrice: product.sellingPrice,
+        quantity: product.quantity,
+        barcode: barcode,
+        barcodeImage: barcodeImage,
+        images: product.images,
+        createdAt: new Date().toISOString(),
+        lastUpdated: new Date().toISOString(),
+        stock: product.quantity // Initial stock is the same as quantity
+      };
 
+      // Save the product to Firebase
+      await set(newProductRef, productData);
+      
       toast.success('Product registered successfully!', {
         position: "top-right",
         autoClose: 3000,
@@ -217,6 +235,7 @@ const ProductRegistration = () => {
         setIsSubmitting(false);
       }, 1000);
     } catch (error) {
+      console.error('Error saving product:', error);
       toast.error('Failed to register product. Please try again.', {
         position: "top-right",
         autoClose: 3000,
@@ -595,7 +614,7 @@ const ProductRegistration = () => {
             ) : (
               <>
                 <span className="btn-icon">✅</span>
-                Register Product
+                Register 
               </>
             )}
           </button>

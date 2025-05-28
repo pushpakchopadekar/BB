@@ -33,7 +33,10 @@
   transition: all 0.4s ease;
   position: relative;
   overflow: hidden;
+ 
 }
+  
+
 
 .product-registration::before {
   content: '';
@@ -43,6 +46,7 @@
   right: 0;
   height: 4px;
   background: linear-gradient(90deg, #4f46e5, #10b981, #3b82f6);
+  
 }
 
 .form-title {
@@ -80,7 +84,12 @@
   border: 1px solid var(--border-color);
   transition: all 0.3s ease;
   position: relative;
+  border-top: 1px solid #0e9f6e;
+  border-bottom: 1px solid #0e9f6e;
+  border-left: 1px solid #0e9f6e;
+  border-right: 1px solid #0e9f6e;
 }
+
 
 .card-3d {
   box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
@@ -461,6 +470,7 @@
 
 .cancel-btn, .submit-btn {
   display: flex;
+  flex-direction: row;
   align-items: center;
   gap: 8px;
   padding: 12px 20px;
@@ -472,9 +482,12 @@
 }
 
 .cancel-btn {
-  background-color: var(--error-color);
+  background-color: red;
   color: white;
   border: none;
+  width: 100px;
+  height: 42px;
+  margin-top: 11px;
 }
 
 .cancel-btn:hover {
@@ -484,10 +497,11 @@
 }
 
 .submit-btn {
-  background-color: var(--success-color);
+  background-color: green;
   color: white;
   border: none;
   box-shadow: 0 2px 5px rgba(16, 185, 129, 0.3);
+  width: 100px;
 }
 
 .submit-btn:hover:not(:disabled) {
@@ -748,7 +762,7 @@
 .dark .form-section {
   background-color: var(--dark-primary);
   border-color: var(--dark-border);
-}
+  
 
 .dark .section-title {
   color: var(--dark-text);
