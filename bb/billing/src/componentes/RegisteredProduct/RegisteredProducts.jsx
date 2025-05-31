@@ -109,8 +109,7 @@ const RegisteredProducts = () => {
       result = result.filter(p => 
         p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         (p.barcode && p.barcode.toLowerCase().includes(searchTerm.toLowerCase()))
-      );
-    }
+  )}
 
     // Apply category filter
     if (categoryFilter !== 'All') {
@@ -276,9 +275,36 @@ const RegisteredProducts = () => {
     });
   };
 
+  // Handle save edited product
+  const saveEditedProduct = async (product) => {
+    try {
+      const productRef = ref(database, `products/${product.id}`);
+      await update(productRef, {
+        name: product.name,
+        category: product.category,
+        stock: product.stock,
+        barcode: product.barcode,
+        weight: product.weight || null
+      });
+      setEditingProduct(null);
+    } catch (error) {
+      console.error('Error updating product:', error);
+      toast.error('Failed to update product!', {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "colored",
+      });
+    }
+  };
+
   return (
     <div className="registered-products">
-     
+      <h2>Registered Products</h2>
 
       {/* Category Tabs with Export Button */}
       <div className="tabs-export-container">
@@ -374,12 +400,14 @@ const RegisteredProducts = () => {
                       onChange={() => toggleProductSelection(product.id)}
                     />
                   </td>
-                  <td>
-                    <img 
-                      src={product.images && product.images.length > 0 ? product.images[0] : 'https://via.placeholder.com/80'} 
-                      alt={product.name} 
-                      className="product-image"
-                    />
+                  <td className="image-cell">
+                    <div className="product-image-container">
+                      <img 
+                        src={product.images && product.images.length > 0 ? product.images[0] : 'https://via.placeholder.com/80'} 
+                        alt={product.name} 
+                        className="product-image"
+                      />
+                    </div>
                   </td>
                   <td>{product.name}</td>
                   <td>{product.barcode}</td>

@@ -372,10 +372,7 @@ const ProductRegistration = () => {
         theme="colored"
       />
       
-      <h2 className="form-title">
-        <span className="title-icon">📦</span>
-        Product Registration
-      </h2>
+      
 
       <form onSubmit={handleSubmit} className="product-form">
         <div className="form-section card-3d">

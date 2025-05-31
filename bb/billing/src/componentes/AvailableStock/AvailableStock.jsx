@@ -93,7 +93,7 @@ const JewelryStorePanel = () => {
     : products.filter(product => {
         if (activeTab === 'gold') return product.category === 'Gold';
         if (activeTab === 'silver') return product.category === 'Silver';
-        if (activeTab === 'imitation') return product.category === 'Emitation';
+        if (activeTab === 'imitation') return product.category === 'Imitation';
         return true;
       });
 
@@ -146,19 +146,19 @@ const JewelryStorePanel = () => {
             All
           </button>
           <button 
-            className={`tab ${activeTab === 'gold' ? 'active' : ''}`}
+            className={`tab gold ${activeTab === 'gold' ? 'active' : ''}`}
             onClick={() => setActiveTab('gold')}
           >
             Gold
           </button>
           <button 
-            className={`tab ${activeTab === 'silver' ? 'active' : ''}`}
+            className={`tab silver ${activeTab === 'silver' ? 'active' : ''}`}
             onClick={() => setActiveTab('silver')}
           >
             Silver
           </button>
           <button 
-            className={`tab ${activeTab === 'imitation' ? 'active' : ''}`}
+            className={`tab imitation ${activeTab === 'imitation' ? 'active' : ''}`}
             onClick={() => setActiveTab('imitation')}
           >
             Imitations
@@ -214,9 +214,10 @@ const JewelryStorePanel = () => {
               </div>
               <div className="product-details">
                 <h3 className="product-name">{product.name}</h3>
+                <p className="product-description">{product.description || 'Premium quality jewelry piece'}</p>
                 
                 <div className="product-price-rating">
-            
+                  <span className="price">{getProductPrice(product)}</span>
                   {product.rating && (
                     <span className="rating">
                       {Array.from({ length: 5 }).map((_, i) => (

@@ -1,10 +1,41 @@
+/* Available.css - Jewelry Store Dashboard Redesign */
+
+:root {
+  --primary: #6c5ce7;
+  --primary-dark: #5649c0;
+  --secondary: #00cec9;
+  --success: #00b894;
+  --warning: #fdcb6e;
+  --danger: #d63031;
+  --gold: #ffd700;
+  --silver: #c0c0c0;
+  --imitation: #8B4513;
+  --platinum: #e5e4e2;
+  --diamond: #b9f2ff;
+  --ruby: #e0115f;
+  --emerald: #50c878;
+  --sapphire: #0f52ba;
+  --amethyst: #9966cc;
+  --light: #f5f6fa;
+  --dark: #2d3436;
+  --text: #2d3436;
+  --text-light: #636e72;
+  --border: #dfe6e9;
+  --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  --shadow-hover: 0 8px 15px rgba(0, 0, 0, 0.15);
+  --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
 /* Main container styles */
 .jewelry-store-panel {
-  font-family: 'Arial', sans-serif;
-  max-width: 1200px;
+  font-family: 'Poppins', 'Arial', sans-serif;
+  max-width: 1400px;
   margin: 0 auto;
-  padding: 20px;
-  color: #333;
+  padding: 30px;
+  color: var(--text);
+  background: linear-gradient(135deg, #f9f9ff 0%, #f0f2ff 100%);
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
 }
 
 /* Controls container */
@@ -12,54 +43,141 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 30px;
+  margin-bottom: 40px;
   flex-wrap: wrap;
-  gap: 20px;
+  gap: 25px;
+  padding: 15px;
+  background: white;
+  border-radius: 15px;
+  box-shadow: var(--shadow);
 }
 
-/* Tabs styling */
+/* Tabs styling - Each tab with unique gemstone-inspired colors */
 .tabs {
   display: flex;
-  gap: 10px;
+  gap: 15px;
   flex-wrap: wrap;
 }
 
 .tab {
-  padding: 10px 20px;
+  padding: 12px 25px;
   border: none;
-  border-radius: 20px;
-  background-color: #f0f0f0;
+  border-radius: 30px;
+  background-color: var(--light);
   cursor: pointer;
   font-weight: 600;
-  transition: all 0.3s ease;
+  transition: var(--transition);
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+  color: var(--text);
+  z-index: 1;
+}
+
+.tab::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+  z-index: -1;
+  opacity: 0;
+  transition: var(--transition);
+  border-radius: 30px;
 }
 
 .tab:hover {
-  background-color: #e0e0e0;
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-hover);
+  color: white;
+}
+
+.tab:hover::before {
+  opacity: 1;
+}
+
+/* Unique colors for each tab */
+.tab.gold {
+  background-color: var(--gold);
+  color: #333;
+}
+
+.tab.gold:hover {
+  color: white;
+}
+
+.tab.gold::before {
+  background: linear-gradient(135deg, #ffd700 0%, #daa520 100%);
+}
+
+.tab.silver {
+  background-color: var(--silver);
+  color: #333;
+}
+
+.tab.silver:hover {
+  color: white;
+}
+
+.tab.silver::before {
+  background: linear-gradient(135deg, #c0c0c0 0%, #a8a8a8 100%);
+}
+
+.tab.imitation {
+  background-color: var(--imitation);
+  color: white;
+}
+
+.tab.imitation:hover {
+  color: white;
+}
+
+.tab.imitation::before {
+  background: linear-gradient(135deg, #8B4513 0%, #5D2906 100%);
 }
 
 .tab.active {
-  background-color: #4F46E5;
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
   color: white;
+}
+
+.tab.active::before {
+  opacity: 1;
 }
 
 /* Sort container */
 .sort-container {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 15px;
+  background: white;
+  padding: 10px 15px;
+  border-radius: 10px;
+  box-shadow: var(--shadow);
 }
 
 .sort-container label {
   font-weight: 600;
+  color: var(--text-light);
 }
 
 .sort-container select {
-  padding: 8px 12px;
-  border-radius: 5px;
-  border: 1px solid #ddd;
-  background-color: white;
+  padding: 10px 15px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background-color: var(--light);
   cursor: pointer;
+  font-weight: 500;
+  transition: var(--transition);
+}
+
+.sort-container select:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.2);
 }
 
 /* Loading indicator */
@@ -68,16 +186,17 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 40px;
+  padding: 60px;
 }
 
 .loading-indicator .spinner {
-  border: 4px solid rgba(0, 0, 0, 0.1);
+  border: 5px solid rgba(0, 0, 0, 0.1);
   border-radius: 50%;
-  border-top: 4px solid #4F46E5;
-  width: 40px;
-  height: 40px;
+  border-top: 5px solid var(--primary);
+  width: 60px;
+  height: 60px;
   animation: spin 1s linear infinite;
+  box-shadow: 0 4px 10px rgba(108, 92, 231, 0.3);
 }
 
 @keyframes spin {
@@ -85,109 +204,190 @@
   100% { transform: rotate(360deg); }
 }
 
+.loading-indicator p {
+  margin-top: 20px;
+  font-weight: 600;
+  color: var(--text-light);
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% { opacity: 0.6; }
+  50% { opacity: 1; }
+  100% { opacity: 0.6; }
+}
+
 /* Product grid */
 .product-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 25px;
-  margin-top: 20px;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 30px;
+  margin-top: 30px;
 }
 
 /* No products message */
 .no-products {
   grid-column: 1 / -1;
   text-align: center;
-  padding: 40px;
-  color: #666;
+  padding: 60px;
+  color: var(--text-light);
+  background: white;
+  border-radius: 15px;
+  box-shadow: var(--shadow);
 }
 
-/* Product card */
+.no-products i {
+  font-size: 3rem;
+  color: var(--border);
+  margin-bottom: 20px;
+  display: block;
+}
+
+/* Product card - 3D effect with perspective */
 .product-card {
-  border: 1px solid #eee;
-  border-radius: 10px;
+  border: none;
+  border-radius: 15px;
   overflow: hidden;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  transition: var(--transition);
   background-color: white;
   display: flex;
   flex-direction: column;
   height: 100%;
-  border-top: 1px solid #0e9f6e;
-  border-bottom: 1px solid #0e9f6e;
-  border-left: 1px solid #0e9f6e;
-  border-right: 1px solid #0e9f6e;
-  
+  box-shadow: var(--shadow);
+  transform-style: preserve-3d;
+  perspective: 1000px;
+  position: relative;
 }
 
 .product-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+  transform: translateY(-10px) rotateX(5deg);
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+}
+
+.product-card::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, rgba(108, 92, 231, 0.1) 0%, rgba(0, 206, 201, 0.1) 100%);
+  opacity: 0;
+  transition: var(--transition);
+  z-index: 0;
+}
+
+.product-card:hover::after {
+  opacity: 1;
 }
 
 .product-image-container {
   position: relative;
-  height: 280px;
+  height: 320px;
   width: 100%;
   overflow: hidden;
-  background-color: #f8f8f8;
+  background: linear-gradient(135deg, #f8f8f8 0%, #f0f0f0 100%);
   display: flex;
   align-items: center;
   justify-content: center;
+  z-index: 1;
 }
 
 .product-image {
-  max-width: 90%;
-  max-height: 90%;
+  width: auto;
+  height: auto;
+  max-width: 90vh;
+  max-height: 90vh;
   object-fit: contain;
-  transition: transform 0.3s ease;
+  transition: var(--transition);
+  filter: drop-shadow(0 5px 10px rgba(0, 0, 0, 0.1));
+  transform: translateZ(20px);
 }
 
 .product-card:hover .product-image {
-  transform: scale(1.05);
+  transform: scale(1.1) translateZ(50px);
+  filter: drop-shadow(0 10px 15px rgba(0, 0, 0, 0.2));
 }
 
+/* Gemstone badges with shine effect */
 .product-badge {
   position: absolute;
-  top: 10px;
-  right: 10px;
-  padding: 5px 10px;
-  border-radius: 15px;
+  top: 15px;
+  right: 15px;
+  padding: 6px 15px;
+  border-radius: 20px;
   font-size: 0.8rem;
   font-weight: bold;
   color: white;
+  z-index: 2;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.16);
+  transition: var(--transition);
+  overflow: hidden;
+}
+
+.product-badge::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    to bottom right,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0) 45%,
+    rgba(255, 255, 255, 0.5) 48%,
+    rgba(255, 255, 255, 0.8) 50%,
+    rgba(255, 255, 255, 0.5) 52%,
+    rgba(255, 255, 255, 0) 57%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  transform: rotate(30deg);
+  animation: shine 2s infinite;
+}
+
+@keyframes shine {
+  0% { transform: translateX(-100%) rotate(30deg); }
+  20% { transform: translateX(100%) rotate(30deg); }
+  100% { transform: translateX(100%) rotate(30deg); }
 }
 
 .product-badge.gold {
-  background-color: rgba(255, 215, 0, 0.9);
+  background: linear-gradient(135deg, #ffd700 0%, #daa520 100%);
   color: #333;
 }
 
 .product-badge.silver {
-  background-color: rgba(192, 192, 192, 0.9);
+  background: linear-gradient(135deg, #c0c0c0 0%, #a8a8a8 100%);
   color: #333;
 }
 
-.product-badge.emitation {
-  background-color: rgba(51, 51, 51, 0.9);
+.product-badge.imitation {
+  background: linear-gradient(135deg, #894515 0%, #5D2906 100%);
+  color: rgb(92, 87, 87);
 }
 
 .product-details {
-  padding: 15px;
+  padding: 20px;
   flex-grow: 1;
   display: flex;
   flex-direction: column;
+  z-index: 1;
+  background: white;
 }
 
 .product-name {
-  margin: 0 0 10px 0;
-  font-size: 1.2rem;
-  color: #444;
+  margin: 0 0 12px 0;
+  font-size: 1.3rem;
+  color: var(--dark);
+  font-weight: 600;
 }
 
 .product-description {
-  font-size: 0.9rem;
-  color: #666;
-  margin-bottom: 15px;
-  line-height: 1.4;
+  font-size: 0.95rem;
+  color: var(--text-light);
+  margin-bottom: 20px;
+  line-height: 1.5;
   flex-grow: 1;
 }
 
@@ -195,67 +395,96 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 15px;
+  margin-bottom: 20px;
 }
 
 .price {
-  font-weight: bold;
-  font-size: 1.1rem;
-  color: #333;
+  font-weight: 700;
+  font-size: 1.3rem;
+  color: var(--primary-dark);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.price::before {
+  content: '₹';
+  font-size: 0.9em;
 }
 
 .rating {
   display: flex;
-  gap: 2px;
+  gap: 3px;
 }
 
 .star-filled {
-  color: #FFD700;
+  color: var(--gold);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 .star-empty {
-  color: #ddd;
+  color: var(--border);
 }
 
 .product-stock {
-  font-size: 0.9rem;
+  font-size: 0.95rem;
+  font-weight: 500;
+  padding: 8px 12px;
+  border-radius: 20px;
+  align-self: flex-start;
 }
 
 .in-stock {
-  color: #4CAF50;
+  background-color: rgba(0, 184, 148, 0.1);
+  color: var(--success);
 }
 
 .low-stock {
-  color: #FF9800;
+  background-color: rgba(253, 203, 110, 0.1);
+  color: #e67e22;
 }
 
 .out-of-stock {
-  color: #F44336;
+  background-color: rgba(214, 48, 49, 0.1);
+  color: var(--danger);
 }
 
 /* Responsive adjustments */
+@media (max-width: 1200px) {
+  .product-grid {
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  }
+}
+
 @media (max-width: 768px) {
+  .jewelry-store-panel {
+    padding: 20px;
+  }
+  
   .controls-container {
     flex-direction: column;
-    align-items: flex-start;
+    align-items: stretch;
+    gap: 15px;
   }
   
   .tabs {
     width: 100%;
-    justify-content: space-between;
+    overflow-x: auto;
+    padding-bottom: 10px;
+    scrollbar-width: thin;
   }
   
   .tab {
-    flex: 1;
-    text-align: center;
+    flex: 0 0 auto;
   }
   
   .product-grid {
-    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 20px;
   }
   
   .product-image-container {
-    height: 240px;
+    height: 280px;
   }
 }
 
@@ -265,6 +494,55 @@
   }
   
   .product-image-container {
-    height: 220px;
+    height: 250px;
   }
+  
+  .tab {
+    padding: 10px 15px;
+    font-size: 0.9rem;
+  }
+}
+
+/* Dark mode styles */
+.dark-mode .jewelry-store-panel {
+  background: linear-gradient(135deg, #1e272e 0%, #2d3436 100%);
+  color: #f5f6fa;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+.dark-mode .controls-container,
+.dark-mode .no-products,
+.dark-mode .product-card,
+.dark-mode .product-details,
+.dark-mode .sort-container {
+  background-color: #2d3436;
+  color: #f5f6fa;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+.dark-mode .product-name {
+  color: #f5f6fa;
+}
+
+.dark-mode .product-description {
+  color: #b2bec3;
+}
+
+.dark-mode .product-image-container {
+  background: linear-gradient(135deg, #3c4852 0%, #2d3436 100%);
+}
+
+.dark-mode .tab {
+  background-color: #3c4852;
+  color: #f5f6fa;
+}
+
+.dark-mode .sort-container select {
+  background-color: #3c4852;
+  color: #f5f6fa;
+  border-color: #4b5a65;
+}
+
+.dark-mode .star-empty {
+  color: #4b5a65;
 }
