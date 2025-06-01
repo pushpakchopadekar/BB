@@ -1,10 +1,16 @@
 /* RegisteredProducts.css */
-
 .registered-products {
   padding: 20px;
   background-color: #fff;
   border-radius: 8px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  font-family: 'Inter', sans-serif;
+}
+
+.registered-products h2 {
+  color: #f97316;
+  margin-bottom: 20px;
+  font-weight: 600;
 }
 
 .tabs-export-container {
@@ -12,53 +18,146 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 15px;
 }
 
 .category-tabs {
   display: flex;
   gap: 10px;
+  flex-wrap: wrap;
 }
 
 .tab-btn {
   padding: 8px 15px;
   border: none;
-  border-radius: 4px;
+  border-radius: 20px;
   cursor: pointer;
-  background-color: #f0f0f0;
-  color: #555;
   font-weight: 500;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
+}
+
+.tab-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #ffedd5, #fed7aa);
+  z-index: -1;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.tab-btn:hover::before {
+  opacity: 1;
 }
 
 .tab-btn.active {
-  background-color: #b8860b;
+  background: linear-gradient(135deg, #f97316, #ea580c);
+  color: white;
+  box-shadow: 0 2px 8px rgba(249, 115, 22, 0.3);
+}
+
+/* Category-specific colors */
+.tab-btn[data-category="Gold"] {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+.tab-btn[data-category="Gold"]:hover {
+  background-color: #fde68a;
+}
+
+.tab-btn[data-category="Gold"].active {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
   color: white;
 }
 
-.export-btn {
-  background-color: #4CAF50;
+.tab-btn[data-category="Silver"] {
+  background-color: #e5e7eb;
+  color: #374151;
+}
+
+.tab-btn[data-category="Silver"]:hover {
+  background-color: #d1d5db;
+}
+
+.tab-btn[data-category="Silver"].active {
+  background: linear-gradient(135deg, #9ca3af, #6b7280);
   color: white;
-  border: none;
+}
+
+.tab-btn[data-category="Emitation"] {
+  background-color: #ecfdf5;
+  color: #065f46;
+}
+
+.tab-btn[data-category="Emitation"]:hover {
+  background-color: #d1fae5;
+}
+
+.tab-btn[data-category="Emitation"].active {
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: white;
+}
+
+.tab-btn[data-category="All"] {
+  background-color: #f5f3ff;
+  color: #5b21b6;
+}
+
+.tab-btn[data-category="All"]:hover {
+  background-color: #ede9fe;
+}
+
+.tab-btn[data-category="All"].active {
+  background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+  color: white;
+}
+
+.export-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.export-btn {
+  background-color: white;
+  color: #f97316;
+  border: 2px solid #f97316;
   padding: 8px 16px;
   border-radius: 4px;
   cursor: pointer;
   display: flex;
   align-items: center;
   gap: 5px;
+  font-weight: 500;
+  transition: all 0.3s ease;
 }
 
 .export-btn:hover {
-  background-color: #45a049;
+  background-color: #f97316;
+  color: white;
+  box-shadow: 0 2px 8px rgba(249, 115, 22, 0.3);
 }
 
-/* Search & Filter Section */
+.export-icon {
+  font-size: 16px;
+}
+
 .products-filters {
   display: flex;
   flex-wrap: wrap;
   gap: 15px;
   margin-bottom: 20px;
   padding: 15px;
-  background-color: #f9f9f9;
+  background-color: #fff7ed;
   border-radius: 8px;
+  border: 1px solid #ffedd5;
 }
 
 .search-bar {
@@ -70,18 +169,25 @@
 .search-bar input {
   flex: 1;
   padding: 8px 12px;
-  border: 1px solid #ddd;
+  border: 1px solid #d1d5db;
   border-radius: 4px 0 0 4px;
   font-size: 14px;
+  outline: none;
+  transition: border-color 0.3s ease;
+}
+
+.search-bar input:focus {
+  border-color: #f97316;
 }
 
 .search-bar button {
   padding: 8px 15px;
-  background-color: #f0f0f0;
-  border: 1px solid #ddd;
+  background-color: #f97316;
+  border: 1px solid #f97316;
   border-left: none;
   border-radius: 0 4px 4px 0;
   cursor: pointer;
+  color: white;
 }
 
 .filter-group {
@@ -92,67 +198,76 @@
 
 .filter-group label {
   font-weight: 500;
-  color: #555;
+  color: #374151;
 }
 
 .filter-group select {
   padding: 8px;
-  border: 1px solid #ddd;
+  border: 1px solid #d1d5db;
   border-radius: 4px;
   min-width: 120px;
+  outline: none;
+  transition: border-color 0.3s ease;
 }
 
-/* Product Table */
+.filter-group select:focus {
+  border-color: #f97316;
+}
+
 .products-table-container {
   overflow-x: auto;
+  margin-bottom: 20px;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
 }
 
 .products-table {
   width: 100%;
   border-collapse: collapse;
-  margin-bottom: 15px;
 }
 
 .products-table th {
-  background-color: #f5f5f5;
+  background-color: #fff7ed;
   padding: 12px;
   text-align: left;
   font-weight: 500;
-  color: #555;
+  color: #374151;
+  border-bottom: 2px solid #f97316;
 }
 
 .products-table td {
   padding: 12px;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid #e5e7eb;
   vertical-align: middle;
 }
 
 .products-table tr:hover {
-  background-color: #f9f9f9;
+  background-color: #fffbeb;
 }
 
 .products-table tr.low-stock {
-  background-color: #fff9f9;
+  background-color: #fff1f2;
 }
 
 .image-cell {
-  width: 80px;
+  width: 70px;
 }
 
 .product-image-container {
-  width: 100px;
-  height: 100px;
+  width: 50px;
+  height: 50px;
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
   border-radius: 4px;
+  background-color: #f5f5f5;
 }
 
 .product-image {
-  max-width: 100px;
-  max-height: 100px;
-  object-fit: contain;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .stock-badge {
@@ -168,39 +283,61 @@
   color: #c62828;
 }
 
+.action-buttons {
+  display: flex;
+  gap: 8px;
+}
+
 .edit-btn, .delete-btn {
   padding: 6px 12px;
   border: none;
   border-radius: 4px;
   cursor: pointer;
   font-size: 14px;
-  margin-right: 5px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  height: 32px;
+  min-width: 70px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .edit-btn {
-  background-color: #5bc0de;
+  background-color: #3b82f6;
   color: white;
 }
 
+.edit-btn:hover {
+  background-color: #2563eb;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+}
+
 .delete-btn {
-  background-color: #d9534f;
+  background-color: #ef4444;
   color: white;
+}
+
+.delete-btn:hover {
+  background-color: #dc2626;
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
 }
 
 .no-products {
   text-align: center;
   padding: 30px;
-  color: #777;
+  color: #6b7280;
 }
 
-/* Bulk Actions & Pagination */
 .products-footer {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-top: 20px;
   padding-top: 15px;
-  border-top: 1px solid #eee;
+  border-top: 1px solid #e5e7eb;
+  flex-wrap: wrap;
+  gap: 15px;
 }
 
 .bulk-actions {
@@ -211,17 +348,25 @@
 
 .bulk-delete-btn {
   padding: 6px 12px;
-  background-color: #d9534f;
+  background-color: #ef4444;
   color: white;
   border: none;
   border-radius: 4px;
   cursor: pointer;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.bulk-delete-btn:hover {
+  background-color: #dc2626;
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
 }
 
 .pagination {
   display: flex;
   align-items: center;
   gap: 20px;
+  flex-wrap: wrap;
 }
 
 .items-per-page {
@@ -232,8 +377,9 @@
 
 .items-per-page select {
   padding: 6px;
-  border: 1px solid #ddd;
+  border: 1px solid #d1d5db;
   border-radius: 4px;
+  outline: none;
 }
 
 .page-controls {
@@ -244,10 +390,17 @@
 
 .page-controls button {
   padding: 6px 10px;
-  background-color: #f0f0f0;
-  border: 1px solid #ddd;
+  background-color: white;
+  border: 1px solid #d1d5db;
   border-radius: 4px;
   cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.page-controls button:hover:not(:disabled) {
+  background-color: #f97316;
+  color: white;
+  border-color: #f97316;
 }
 
 .page-controls button:disabled {
@@ -255,7 +408,6 @@
   cursor: not-allowed;
 }
 
-/* Modals */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -271,7 +423,7 @@
 
 .confirm-modal, .edit-modal {
   background-color: white;
-  padding: 20px;
+  padding: 25px;
   border-radius: 8px;
   width: 100%;
   max-width: 400px;
@@ -280,9 +432,9 @@
 
 .confirm-modal h3, .edit-modal h3 {
   margin-top: 0;
-  color: #b8860b;
+  color: #f97316;
   padding-bottom: 10px;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid #e5e7eb;
 }
 
 .modal-actions {
@@ -297,21 +449,40 @@
   border: none;
   border-radius: 4px;
   cursor: pointer;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  height: 36px;
+  min-width: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .cancel-btn {
-  background-color: #f0f0f0;
-  color: #555;
+  background-color: #e5e7eb;
+  color: #374151;
+}
+
+.cancel-btn:hover {
+  background-color: #d1d5db;
 }
 
 .confirm-btn {
-  background-color: #d9534f;
+  background-color: #ef4444;
   color: white;
 }
 
+.confirm-btn:hover {
+  background-color: #dc2626;
+}
+
 .save-btn {
-  background-color: #5cb85c;
+  background-color: #10b981;
   color: white;
+}
+
+.save-btn:hover {
+  background-color: #059669;
 }
 
 .edit-form {
@@ -328,16 +499,23 @@
   display: block;
   margin-bottom: 5px;
   font-weight: 500;
-  color: #555;
+  color: #374151;
 }
 
 .form-group input,
 .form-group select {
   width: 100%;
   padding: 8px 12px;
-  border: 1px solid #ddd;
+  border: 1px solid #d1d5db;
   border-radius: 4px;
   font-size: 14px;
+  outline: none;
+  transition: border-color 0.3s ease;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+  border-color: #f97316;
 }
 
 .form-row {
@@ -349,19 +527,42 @@
   flex: 1;
 }
 
-/* Responsive adjustments */
 @media (max-width: 768px) {
+  .tabs-export-container {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .export-buttons {
+    width: 100%;
+    flex-direction: column;
+  }
+  
+  .export-btn {
+    width: 100%;
+    justify-content: center;
+  }
+  
   .products-filters {
     flex-direction: column;
   }
   
   .products-footer {
     flex-direction: column;
-    gap: 15px;
+  }
+  
+  .bulk-actions {
+    width: 100%;
+    justify-content: space-between;
   }
   
   .pagination {
     width: 100%;
     justify-content: space-between;
+  }
+  
+  .form-row {
+    flex-direction: column;
+    gap: 10px;
   }
 }

@@ -4,12 +4,30 @@ import { database } from '../../firebase';
 import { ref, onValue } from 'firebase/database';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { FaGem, FaCoins, FaExclamationTriangle, FaBoxes, FaQuestionCircle } from 'react-icons/fa';
 
 const JewelryStorePanel = () => {
   const [products, setProducts] = useState([]);
   const [activeTab, setActiveTab] = useState('all');
   const [sortOption, setSortOption] = useState('default');
   const [isLoading, setIsLoading] = useState(true);
+  const [firebaseError, setFirebaseError] = useState(null);
+
+  // Calculate summary statistics
+  const totalItems = products.length;
+  const goldItems = products.filter(p => p.category === 'Gold').length;
+  const silverItems = products.filter(p => p.category === 'Silver').length;
+  const emitationItems = products.filter(p => p.category === 'Emitation').length;
+  const lowStockItems = products.filter(p => (p.stock || 0) <= 2).length;
+
+  // Debugging function to log product categories
+  const logProductCategories = (products) => {
+    const categories = {};
+    products.forEach(product => {
+      categories[product.category] = (categories[product.category] || 0) + 1;
+    });
+    console.log('Product Categories:', categories);
+  };
 
   // Fetch products from Firebase
   useEffect(() => {
@@ -17,6 +35,7 @@ const JewelryStorePanel = () => {
     
     const fetchProducts = () => {
       setIsLoading(true);
+      setFirebaseError(null);
       toast.info('Loading products...', {
         position: "top-right",
         autoClose: false,
@@ -30,28 +49,50 @@ const JewelryStorePanel = () => {
       });
 
       onValue(productsRef, (snapshot) => {
-        const data = snapshot.val();
-        if (data) {
-          const productsArray = Object.keys(data).map(key => ({
-            id: key,
-            ...data[key]
-          }));
-          setProducts(productsArray);
+        try {
+          const data = snapshot.val();
+          console.log('Raw Firebase Data:', data);
+          
+          if (data) {
+            const productsArray = Object.keys(data).map(key => ({
+              id: key,
+              barcode: key.slice(0, 8).toUpperCase(),
+              ...data[key]
+            }));
+            
+            setProducts(productsArray);
+            logProductCategories(productsArray);
+            
+            toast.dismiss('loading-toast');
+            toast.success(`Loaded ${productsArray.length} products successfully!`, {
+              position: "top-right",
+              autoClose: 3000,
+              hideProgressBar: false,
+              closeOnClick: true,
+              pauseOnHover: true,
+              draggable: true,
+              progress: undefined,
+              theme: "colored",
+            });
+          } else {
+            setProducts([]);
+            toast.dismiss('loading-toast');
+            toast.info('No products found in database.', {
+              position: "top-right",
+              autoClose: 3000,
+              hideProgressBar: false,
+              closeOnClick: true,
+              pauseOnHover: true,
+              draggable: true,
+              progress: undefined,
+              theme: "colored",
+            });
+          }
+        } catch (error) {
+          console.error('Error processing data:', error);
+          setFirebaseError('Error processing data from Firebase');
           toast.dismiss('loading-toast');
-          toast.success('Products loaded successfully!', {
-            position: "top-right",
-            autoClose: 3000,
-            hideProgressBar: false,
-            closeOnClick: true,
-            pauseOnHover: true,
-            draggable: true,
-            progress: undefined,
-            theme: "colored",
-          });
-        } else {
-          setProducts([]);
-          toast.dismiss('loading-toast');
-          toast.info('No products found in database.', {
+          toast.error('Error processing product data!', {
             position: "top-right",
             autoClose: 3000,
             hideProgressBar: false,
@@ -64,9 +105,10 @@ const JewelryStorePanel = () => {
         }
         setIsLoading(false);
       }, (error) => {
-        console.error('Error fetching products:', error);
+        console.error('Firebase connection error:', error);
+        setFirebaseError(`Firebase error: ${error.message}`);
         toast.dismiss('loading-toast');
-        toast.error('Failed to load products!', {
+        toast.error('Failed to connect to database!', {
           position: "top-right",
           autoClose: 3000,
           hideProgressBar: false,
@@ -88,14 +130,13 @@ const JewelryStorePanel = () => {
   }, []);
 
   // Filter products based on active tab
-  const filteredProducts = activeTab === 'all' 
-    ? products 
-    : products.filter(product => {
-        if (activeTab === 'gold') return product.category === 'Gold';
-        if (activeTab === 'silver') return product.category === 'Silver';
-        if (activeTab === 'imitation') return product.category === 'Imitation';
-        return true;
-      });
+  const filteredProducts = products.filter(product => {
+    if (activeTab === 'all') return product.category === 'Gold' || product.category === 'Silver';
+    if (activeTab === 'gold') return product.category === 'Gold';
+    if (activeTab === 'silver') return product.category === 'Silver';
+    if (activeTab === 'emitation') return product.category === 'Emitation';
+    return false;
+  });
 
   // Sort products based on sort option
   const sortedProducts = [...filteredProducts].sort((a, b) => {
@@ -104,38 +145,83 @@ const JewelryStorePanel = () => {
         return (a.sellingPrice || a.price || 0) - (b.sellingPrice || b.price || 0);
       case 'price-high':
         return (b.sellingPrice || b.price || 0) - (a.sellingPrice || a.price || 0);
-      case 'rating':
-        return (b.rating || 0) - (a.rating || 0);
+      case 'stock-low':
+        return (a.stock || 0) - (b.stock || 0);
+      case 'stock-high':
+        return (b.stock || 0) - (a.stock || 0);
       default:
         return 0;
     }
   });
 
-  // Function to get product image or placeholder
-  const getProductImage = (product) => {
-    if (product.images && product.images.length > 0) {
-      return product.images[0];
-    }
-    
-    // Return placeholder based on category
-    if (product.category === 'Gold') {
-      return 'https://via.placeholder.com/600x600/FFD700/000000?text=Gold+Jewelry';
-    } else if (product.category === 'Silver') {
-      return 'https://via.placeholder.com/600x600/C0C0C0/000000?text=Silver+Jewelry';
-    } else {
-      return 'https://via.placeholder.com/600x600/FFFFFF/000000?text=Jewelry';
-    }
+  // Function to get stock status
+  const getStockStatus = (stock) => {
+    if (stock <= 0) return 'Out of Stock';
+    if (stock <= 2) return 'Low Stock';
+    if (stock <= 5) return 'Medium Stock';
+    return 'In Stock';
   };
 
-  // Function to get product price
-  const getProductPrice = (product) => {
-    if (product.sellingPrice) return product.sellingPrice;
-    if (product.price) return product.price;
-    return 0;
+  // Function to get status color class
+  const getStatusClass = (stock) => {
+    if (stock <= 0) return 'status-out';
+    if (stock <= 2) return 'status-low';
+    if (stock <= 5) return 'status-medium';
+    return 'status-high';
   };
 
   return (
     <div className="jewelry-store-panel">
+      {/* Debugging Info */}
+      {firebaseError && (
+        <div className="firebase-error">
+          <FaQuestionCircle /> {firebaseError}
+        </div>
+      )}
+
+      {/* Summary Cards */}
+      <div className="summary-cards">
+        <div className="summary-card total-items">
+          <div className="card-icon">
+            <FaBoxes className="icon" />
+          </div>
+          <div className="card-content">
+            <h3>Total Items</h3>
+            <p>{totalItems}</p>
+          </div>
+        </div>
+        
+        <div className="summary-card gold-items">
+          <div className="card-icon">
+            <FaGem className="icon" />
+          </div>
+          <div className="card-content">
+            <h3>Gold Items</h3>
+            <p>{goldItems}</p>
+          </div>
+        </div>
+        
+        <div className="summary-card silver-items">
+          <div className="card-icon">
+            <FaCoins className="icon" />
+          </div>
+          <div className="card-content">
+            <h3>Silver Items</h3>
+            <p>{silverItems}</p>
+          </div>
+        </div>
+        
+        <div className="summary-card emitation-items">
+          <div className="card-icon">
+            <FaQuestionCircle className="icon" />
+          </div>
+          <div className="card-content">
+            <h3>Emitation Items</h3>
+            <p>{emitationItems}</p>
+          </div>
+        </div>
+      </div>
+      
       <div className="controls-container">
         {/* Tabs */}
         <div className="tabs">
@@ -158,10 +244,10 @@ const JewelryStorePanel = () => {
             Silver
           </button>
           <button 
-            className={`tab imitation ${activeTab === 'imitation' ? 'active' : ''}`}
-            onClick={() => setActiveTab('imitation')}
+            className={`tab emitation ${activeTab === 'emitation' ? 'active' : ''}`}
+            onClick={() => setActiveTab('emitation')}
           >
-            Imitations
+            Emitations
           </button>
         </div>
         
@@ -176,7 +262,8 @@ const JewelryStorePanel = () => {
             <option value="default">Default</option>
             <option value="price-low">Price: Low to High</option>
             <option value="price-high">Price: High to Low</option>
-            <option value="rating">Rating</option>
+            <option value="stock-low">Stock: Low to High</option>
+            <option value="stock-high">Stock: High to Low</option>
           </select>
         </div>
       </div>
@@ -189,53 +276,61 @@ const JewelryStorePanel = () => {
         </div>
       )}
       
-      {/* Product grid */}
-      <div className="product-grid">
+      {/* Product Table */}
+      <div className="product-table-container">
         {!isLoading && sortedProducts.length === 0 ? (
           <div className="no-products">
             <p>No products found in this category.</p>
+            {activeTab === 'emitation' && (
+              <div className="debug-info">
+                <p>Check if any products have category exactly as "Emitation" in Firebase.</p>
+                <p>Current categories in database: {[...new Set(products.map(p => p.category))].join(', ')}</p>
+              </div>
+            )}
           </div>
         ) : (
-          sortedProducts.map(product => (
-            <div key={product.id} className="product-card">
-              <div className="product-image-container">
-                <img 
-                  src={getProductImage(product)} 
-                  alt={product.name} 
-                  className="product-image"
-                  onError={(e) => {
-                    e.target.src = 'https://via.placeholder.com/600x600/FFFFFF/000000?text=No+Image';
-                    e.target.onerror = null;
-                  }}
-                />
-                <span className={`product-badge ${product.category.toLowerCase()}`}>
-                  {product.category}
-                </span>
-              </div>
-              <div className="product-details">
-                <h3 className="product-name">{product.name}</h3>
-                <p className="product-description">{product.description || 'Premium quality jewelry piece'}</p>
-                
-                <div className="product-price-rating">
-                  <span className="price">{getProductPrice(product)}</span>
-                  {product.rating && (
-                    <span className="rating">
-                      {Array.from({ length: 5 }).map((_, i) => (
-                        <span key={i} className={i < Math.floor(product.rating) ? 'star-filled' : 'star-empty'}>
-                          {i < Math.floor(product.rating) ? '★' : '☆'}
-                        </span>
-                      ))}
+          <table className="product-table">
+            <thead>
+              <tr>
+                <th>Barcode</th>
+                <th>Product Name</th>
+                <th>Category</th>
+                {activeTab === 'emitation' ? (
+                  <th>Price</th>
+                ) : (
+                  <th>Weight (g)</th>
+                )}
+                <th>Available Qty</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {sortedProducts.map(product => (
+                <tr key={product.id} className="product-row">
+                  <td>{product.barcode}</td>
+                  <td>{product.name}</td>
+                  <td>
+                    <span className={`category-badge ${product.category.toLowerCase()}`}>
+                      {product.category}
                     </span>
-                  )}
-                </div>
-                <div className="product-stock">
-                  Stock: <span className={product.stock <= 0 ? 'out-of-stock' : product.stock < 5 ? 'low-stock' : 'in-stock'}>
-                    {product.stock <= 0 ? 'Out of stock' : `${product.stock} available`}
-                  </span>
-                </div>
-              </div>
-            </div>
-          ))
+                  </td>
+                  <td>
+                    {product.category === 'Emitation' ? (
+                      `₹${product.sellingPrice || product.price || 0}`
+                    ) : (
+                      product.weight ? `${product.weight}g` : 'N/A'
+                    )}
+                  </td>
+                  <td>{product.stock || 0}</td>
+                  <td>
+                    <span className={`status-badge ${getStatusClass(product.stock)}`}>
+                      {getStockStatus(product.stock)}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         )}
       </div>
     </div>

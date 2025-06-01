@@ -372,220 +372,224 @@ const ProductRegistration = () => {
         theme="colored"
       />
       
-      
-
       <form onSubmit={handleSubmit} className="product-form">
-        <div className="form-section card-3d">
-          <h3 className="section-title">
-            <span className="section-icon">ℹ️</span>
-            Basic Product Information
-          </h3>
-          <div className="form-row">
-            <div className="form-group floating-label">
-              <input 
-                type="text" 
-                name="name" 
-                value={product.name}
-                onChange={handleChange}
-                required
-                className={product.name ? 'has-value' : ''}
-              />
-              <label>Product Name*</label>
-              <span className="highlight"></span>
-            </div>
-
-            <div className="form-group floating-label">
-              <select 
-                name="category" 
-                value={product.category}
-                onChange={handleChange}
-                required
-                className={product.category ? 'has-value' : ''}
-              >
-                <option value=""></option>
-                {categories.map(cat => (
-                  <option key={cat} value={cat}>{cat}</option>
-                ))}
-              </select>
-              <label>Category*</label>
-              <span className="highlight"></span>
-            </div>
-          </div>
-
-          {product.category === 'Gold' || product.category === 'Silver' ? (
-            <div className="form-group floating-label">
-              <input 
-                type="number" 
-                name="weight" 
-                value={product.weight}
-                onChange={handleChange}
-                step="0.01"
-                min="0"
-                required
-                className={product.weight ? 'has-value' : ''}
-              />
-              <label>Weight (grams)*</label>
-              <span className="highlight"></span>
-            </div>
-          ) : (
-            <div className="form-row">
-              <div className="form-group floating-label">
-                <input 
-                  type="number" 
-                  name="purchasePrice" 
-                  value={product.purchasePrice}
-                  onChange={handleChange}
-                  step="0.01"
-                  min="0"
-                  required
-                  className={product.purchasePrice ? 'has-value' : ''}
-                />
-                <label>Purchase Price*</label>
-                <span className="highlight"></span>
-              </div>
-              <div className="form-group floating-label">
-                <input 
-                  type="number" 
-                  name="sellingPrice" 
-                  value={product.sellingPrice}
-                  onChange={handleChange}
-                  step="0.01"
-                  min="0"
-                  required
-                  className={product.sellingPrice ? 'has-value' : ''}
-                />
-                <label>Selling Price*</label>
-                <span className="highlight"></span>
-              </div>
-            </div>
-          )}
-        </div>
-
-        <div className="form-section card-3d">
-          <h3 className="section-title">
-            <span className="section-icon">📊</span>
-            Inventory Details
-          </h3>
-          <div className="form-row">
-            <div className="form-group floating-label">
-              <input 
-                type="number" 
-                name="quantity" 
-                value={product.quantity}
-                onChange={handleChange}
-                min="1"
-                required
-                className={product.quantity ? 'has-value' : ''}
-              />
-              <label>Quantity*</label>
-              <span className="highlight"></span>
-            </div>
-
-            <div className="form-group">
-              <div className="barcode-input-container">
-                <input 
-                  type="text" 
-                  value={barcode}
-                  readOnly
-                  className="read-only"
-                  placeholder={barcodeGenerated ? "Barcode generated" : "Click 'Generate Barcode' to create"}
-                />
-                <span className="barcode-icon">✂️</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="image-barcode-container">
-          <div className="form-section image-section card-3d">
-            <h3 className="section-title">
-              <span className="section-icon">🖼️</span>
-              Product Image
-            </h3>
-            <div className="image-upload-container">
-              <div className="image-preview">
-                {previewImage ? (
-                  <img src={previewImage} alt="Product preview" className="preview-image" />
-                ) : (
-                  <div className="placeholder">
-                    <div className="placeholder-icon">📷</div>
-                    <p>No image selected</p>
-                  </div>
-                )}
-              </div>
-              <div className="upload-controls">
-                <label className="upload-btn pulse">
-                  <span className="upload-icon">⬆️</span>
-                  Upload Image
+        <div className="form-container">
+          {/* Left Section - Product Information */}
+          <div className="left-section">
+            <div className="form-section card-3d">
+              <h3 className="section-title">
+                <span className="section-icon">ℹ️</span>
+                Basic Product Information
+              </h3>
+              <div className="form-row">
+                <div className="form-group floating-label">
                   <input 
-                    type="file" 
-                    accept="image/*"
-                    onChange={handleImageUpload}
-                    style={{ display: 'none' }}
+                    type="text" 
+                    name="name" 
+                    value={product.name}
+                    onChange={handleChange}
+                    required
+                    className={product.name ? 'has-value' : ''}
                   />
-                </label>
-                <p className="upload-hint">Maximum file size: 2MB</p>
+                  <label>Product Name*</label>
+                  <span className="highlight"></span>
+                </div>
+
+                <div className="form-group floating-label">
+                  <select 
+                    name="category" 
+                    value={product.category}
+                    onChange={handleChange}
+                    required
+                    className={product.category ? 'has-value' : ''}
+                  >
+                    <option value=""></option>
+                    {categories.map(cat => (
+                      <option key={cat} value={cat}>{cat}</option>
+                    ))}
+                  </select>
+                  <label>Category*</label>
+                  <span className="highlight"></span>
+                </div>
+              </div>
+
+              {product.category === 'Gold' || product.category === 'Silver' ? (
+                <div className="form-group floating-label">
+                  <input 
+                    type="number" 
+                    name="weight" 
+                    value={product.weight}
+                    onChange={handleChange}
+                    step="0.01"
+                    min="0"
+                    required
+                    className={product.weight ? 'has-value' : ''}
+                  />
+                  <label>Weight (grams)*</label>
+                  <span className="highlight"></span>
+                </div>
+              ) : (
+                <div className="form-row">
+                  <div className="form-group floating-label">
+                    <input 
+                      type="number" 
+                      name="purchasePrice" 
+                      value={product.purchasePrice}
+                      onChange={handleChange}
+                      step="0.01"
+                      min="0"
+                      required
+                      className={product.purchasePrice ? 'has-value' : ''}
+                    />
+                    <label>Purchase Price*</label>
+                    <span className="highlight"></span>
+                  </div>
+                  <div className="form-group floating-label">
+                    <input 
+                      type="number" 
+                      name="sellingPrice" 
+                      value={product.sellingPrice}
+                      onChange={handleChange}
+                      step="0.01"
+                      min="0"
+                      required
+                      className={product.sellingPrice ? 'has-value' : ''}
+                    />
+                    <label>Selling Price*</label>
+                    <span className="highlight"></span>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="form-section card-3d">
+              <h3 className="section-title">
+                <span className="section-icon">📊</span>
+                Inventory Details
+              </h3>
+              <div className="form-row">
+                <div className="form-group floating-label">
+                  <input 
+                    type="number" 
+                    name="quantity" 
+                    value={product.quantity}
+                    onChange={handleChange}
+                    min="1"
+                    required
+                    className={product.quantity ? 'has-value' : ''}
+                  />
+                  <label>Quantity*</label>
+                  <span className="highlight"></span>
+                </div>
+
+                <div className="form-group">
+                  <div className="barcode-input-container">
+                    <input 
+                      type="text" 
+                      value={barcode}
+                      readOnly
+                      className="read-only"
+                      placeholder={barcodeGenerated ? "Barcode generated" : "Click 'Generate Barcode' to create"}
+                    />
+                    <span className="barcode-icon">✂️</span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
 
-          <div className="form-section barcode-section card-3d">
-            <h3 className="section-title">
-              <span className="section-icon">🔖</span>
-              Barcode Generation
-            </h3>
-            <div className="form-row">
-              <div className="form-group">
-                <button 
-                  type="button" 
-                  className={`generate-barcode-btn ${barcodeGenerated ? 'generated' : ''}`}
-                  onClick={generateBarcode}
-                  disabled={barcodeGenerated}
-                >
-                  <span className="btn-icon">{barcodeGenerated ? "✓" : "🔳"}</span>
-                  {barcodeGenerated ? "Barcode Generated" : "Generate Barcode"}
-                </button>
+          {/* Right Section - Image and Barcode */}
+          <div className="right-section">
+            <div className="form-section card-3d">
+              <h3 className="section-title">
+                <span className="section-icon">🖼️</span>
+                Product Image
+              </h3>
+              <div className="image-upload-container">
+                <div className="image-preview">
+                  {previewImage ? (
+                    <img src={previewImage} alt="Product preview" className="preview-image" />
+                  ) : (
+                    <div className="placeholder">
+                      <div className="placeholder-icon">📷</div>
+                      <p>No image selected</p>
+                    </div>
+                  )}
+                </div>
+                <div className="upload-controls">
+                  <label className="upload-btn pulse">
+                    <span className="upload-icon">⬆️</span>
+                    Upload Image
+                    <input 
+                      type="file" 
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                      style={{ display: 'none' }}
+                    />
+                  </label>
+                  <p className="upload-hint">Maximum file size: 2MB</p>
+                </div>
               </div>
             </div>
 
-            {showBarcode && (
-              <div className="barcode-display-container">
-                <div className="barcode-content">
-                  <div className="barcode-image-container">
-                    <img src={barcodeImage} alt="Barcode" className="barcode-image" />
-                  </div>
-                  <div className="barcode-info">
-                    <h4>Product Information</h4>
-                    <p><strong>Barcode:</strong> {barcode}</p>
-                    <p><strong>Name:</strong> {product.name}</p>
-                    <p><strong>Category:</strong> {product.category}</p>
-                    {product.category === 'Gold' || product.category === 'Silver' ? (
-                      <p><strong>Weight:</strong> {product.weight} grams</p>
-                    ) : (
-                      <p><strong>Price:</strong> ₹{product.sellingPrice}</p>
-                    )}
-                  </div>
-                </div>
-                <div className="barcode-actions">
+            <div className="form-section card-3d">
+              <h3 className="section-title">
+                <span className="section-icon">🔖</span>
+                Barcode Generation
+              </h3>
+              <div className="form-row">
+                <div className="form-group">
                   <button 
                     type="button" 
-                    className="download-barcode-btn"
-                    onClick={downloadBarcode}
+                    className={`generate-barcode-btn ${barcodeGenerated ? 'generated' : ''}`}
+                    onClick={generateBarcode}
+                    disabled={barcodeGenerated}
                   >
-                    <span className="btn-icon">⬇️</span>
-                    Download
-                  </button>
-                  <button 
-                    type="button" 
-                    className="print-barcode-btn"
-                    onClick={printBarcode}
-                  >
-                    <span className="btn-icon">🖨️</span>
-                    Print
+                    <span className="btn-icon">{barcodeGenerated ? "✓" : "🔳"}</span>
+                    {barcodeGenerated ? "Barcode Generated" : "Generate Barcode"}
                   </button>
                 </div>
               </div>
-            )}
+
+              {showBarcode && (
+                <div className="barcode-display-container">
+                  <div className="barcode-content">
+                    <div className="barcode-image-container">
+                      <img src={barcodeImage} alt="Barcode" className="barcode-image" />
+                    </div>
+                    <div className="barcode-info">
+                      <h4>Product Information</h4>
+                      <p><strong>Barcode:</strong> {barcode}</p>
+                      <p><strong>Name:</strong> {product.name}</p>
+                      <p><strong>Category:</strong> {product.category}</p>
+                      {product.category === 'Gold' || product.category === 'Silver' ? (
+                        <p><strong>Weight:</strong> {product.weight} grams</p>
+                      ) : (
+                        <p><strong>Price:</strong> ₹{product.sellingPrice}</p>
+                      )}
+                    </div>
+                  </div>
+                  <div className="barcode-actions">
+                    <button 
+                      type="button" 
+                      className="download-barcode-btn"
+                      onClick={downloadBarcode}
+                    >
+                      <span className="btn-icon">⬇️</span>
+                      Download
+                    </button>
+                    <button 
+                      type="button" 
+                      className="print-barcode-btn"
+                      onClick={printBarcode}
+                    >
+                      <span className="btn-icon">🖨️</span>
+                      Print
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
@@ -641,10 +645,7 @@ const ProductRegistration = () => {
               </div>
               <h3 className="modal-title">Success!</h3>
               <p className="modal-text">Product registered successfully</p>
-              <div className="modal-product-info">
-                <p><strong>Name:</strong> {product.name}</p>
-                <p><strong>Barcode:</strong> {barcode}</p>
-              </div>
+              
               <button className="modal-close-btn" onClick={close3DModal}>
                 Close
               </button>

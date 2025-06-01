@@ -199,27 +199,6 @@ const Dashboard = ({ onLogout }) => {
     ]
   };
 
-  // Add scroll animation observer
-  useEffect(() => {
-    const observerOptions = {
-      threshold: 0.1,
-      rootMargin: '0px 0px -50px 0px'
-    };
-
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add('visible');
-        }
-      });
-    }, observerOptions);
-
-    const elements = document.querySelectorAll('.animate-on-scroll');
-    elements.forEach(el => observer.observe(el));
-
-    return () => observer.disconnect();
-  }, [activeMenu]);
-
   useEffect(() => {
     console.log('Active menu changed to:', activeMenu);
     setIsLoading(true);
@@ -385,7 +364,7 @@ const Dashboard = ({ onLogout }) => {
         return (
           <div className="dashboard-content">
             {/* Rates Container */}
-            <div className="rates-container animate-on-scroll">
+            <div className="rates-container">
               <div className="rates-header">
                 <h2 className="section-heading">
                   <DollarSign className="section-icon" /> Today's Precious Metal Rates
@@ -465,7 +444,7 @@ const Dashboard = ({ onLogout }) => {
             </div>
             
             {/* Summary Cards */}
-            <div className="summary-cards animate-on-scroll">
+            <div className="summary-cards">
               <div className="card hover-lift hover-glow">
                 <div className="card-icon gold-bg">
                   <TrendingUp size={24} />
@@ -510,7 +489,7 @@ const Dashboard = ({ onLogout }) => {
             </div>
             
             {/* Chart and Stock Overview */}
-            <div className="row animate-on-scroll">
+            <div className="chart-stock-container">
               <div className="chart-container hover-lift">
                 <div className="chart-header">
                   <h2 className="section-heading">
@@ -581,151 +560,6 @@ const Dashboard = ({ onLogout }) => {
                 </div>
               </div>
             </div>
-            
-            {/* Customer Overview Section */}
-            <div className="customer-overview animate-on-scroll hover-lift">
-              <div className="section-header">
-                <h2 className="section-heading">
-                  <Users className="section-icon" /> Customer Management
-                </h2>
-                
-                {/* Filter Button and Popup */}
-                <div className="filter-btn-container">
-                  <button 
-                    className="filter-btn" 
-                    onClick={toggleCustomerFilter}
-                    aria-expanded={showCustomerFilter}
-                  >
-                    <Filter size={18} /> Filter
-                  </button>
-                  
-                  {/* Filter Popup */}
-                  {showCustomerFilter && (
-                    <div className="filter-popup">
-                      <button 
-                        className="close-filter-btn" 
-                        onClick={toggleCustomerFilter}
-                        aria-label="Close filter"
-                      >
-                        <X size={18} />
-                      </button>
-                      
-                      <div className="filter-group">
-                        <label htmlFor="invoiceFilter">Invoice Number</label>
-                        <input
-                          id="invoiceFilter"
-                          type="text"
-                          placeholder="Search by invoice no."
-                          value={filterInvoiceNo}
-                          onChange={(e) => setFilterInvoiceNo(e.target.value)}
-                          className="focusable"
-                        />
-                      </div>
-                      
-                      <div className="filter-group">
-                        <label htmlFor="nameFilter">Customer Name</label>
-                        <input
-                          id="nameFilter"
-                          type="text"
-                          placeholder="Search by name"
-                          value={filterCustomerName}
-                          onChange={(e) => setFilterCustomerName(e.target.value)}
-                          className="focusable"
-                        />
-                      </div>
-                      
-                      <div className="filter-actions">
-                        <button className="apply-btn" onClick={handleFilterApply}>
-                          Apply Filter
-                        </button>
-                        <button className="reset-btn" onClick={handleFilterReset}>
-                          Reset All
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-              
-              {/* Customer Table Container */}
-              <div className="customer-table-container">
-                {filteredCustomers.length > 0 ? (
-                  <table className="customer-table">
-                    <thead>
-                      <tr>
-                        <th>Invoice No</th>
-                        <th>Customer Name</th>
-                        <th>Phone</th>
-                        <th>Email</th>
-                        <th>Total Purchases</th>
-                        <th>Last Purchase</th>
-                        <th>Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {filteredCustomers.map((customer) => (
-                        <tr key={customer.id}>
-                          <td>#{customer.id}</td>
-                          <td>{customer.name}</td>
-                          <td>{customer.phone || 'N/A'}</td>
-                          <td>{customer.email || 'N/A'}</td>
-                          <td>₹{customer.totalPurchases.toLocaleString()}</td>
-                          <td>{customer.lastPurchase || 'Never'}</td>
-                          <td>
-                            <button className="view-btn">
-                              👁️ View
-                            </button>
-                            <button className="edit-btn">
-                              ✏️ Edit
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                ) : (
-                  <div className="no-results">
-                    <AlertCircle size={48} className="no-results-icon" />
-                    <p>No customers found matching your criteria.</p>
-                    <button 
-                      className="reset-filters-btn"
-                      onClick={handleFilterReset}
-                    >
-                      Reset Filters
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
-            
-            {/* Pagination */}
-            <div className="pagination">
-              <button 
-                onClick={() => paginate(currentPage - 1)} 
-                disabled={currentPage === 1}
-                className="focusable"
-              >
-                Previous
-              </button>
-              
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map(number => (
-                <button 
-                  key={number} 
-                  onClick={() => paginate(number)}
-                  className={`focusable ${currentPage === number ? 'active' : ''}`}
-                >
-                  {number}
-                </button>
-              ))}
-              
-              <button 
-                onClick={() => paginate(currentPage + 1)} 
-                disabled={currentPage === totalPages || totalPages === 0}
-                className="focusable"
-              >
-                Next
-              </button>
-            </div>
           </div>
         );
       case 'Product Registration':
@@ -740,7 +574,7 @@ const Dashboard = ({ onLogout }) => {
         return <AvailableStock />;
       case 'Invoices':
         return (
-          <div className="coming-soon animate-on-scroll">
+          <div className="coming-soon">
             <h2><FileText size={48} /> Invoices Management</h2>
             <p>Advanced invoice management system coming soon!</p>
             <div style={{marginTop: '2rem'}}>
@@ -752,14 +586,14 @@ const Dashboard = ({ onLogout }) => {
         return <SalesOverview />;
       case 'Stock Alert':
         return (
-          <div className="coming-soon animate-on-scroll">
+          <div className="coming-soon">
             <h2><AlertTriangle size={48} /> Stock Alert System</h2>
             <p>Intelligent stock monitoring and alerts coming soon!</p>
           </div>
         );
       default:
         return (
-          <div className="coming-soon animate-on-scroll">
+          <div className="coming-soon">
             <h2>{activeMenu}</h2>
             <p>This feature is under development!</p>
           </div>

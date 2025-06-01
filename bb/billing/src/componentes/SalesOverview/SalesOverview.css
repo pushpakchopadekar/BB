@@ -1,3 +1,5 @@
+/* salesoverview.css - Updated with Unified Color Theme */
+
 /* Sales Overview Styles - Modern Dashboard Theme */
 .sales-overview {
   padding: 20px;
@@ -139,15 +141,15 @@
 }
 
 .chart-type-selector button:nth-child(1) {
-  background-color: #95a4d5; /* Blue */
+  background-color: #93c5fd; /* Lighter blue */
 }
 
 .chart-type-selector button:nth-child(2) {
-  background-color: #8fd5c1; /* Emerald */
+  background-color: #86efac; /* Lighter green */
 }
 
 .chart-type-selector button:nth-child(3) {
-  background-color: #e78db1; /* Pink */
+  background-color: #f9a8d4; /* Lighter pink */
 }
 
 .chart-icon {
@@ -164,10 +166,6 @@
 
 .chart-type-selector button:nth-child(3).active {
   background-color: #9d174d; /* Pink */
-}
-
-.chart-icon {
-  font-size: 14px;
 }
 
 .chart-container1 {
@@ -233,70 +231,69 @@
 }
 
 .gold {
-  background-color: rgba(245, 223, 78, 0.1);
-  border-left: 4px solid #f5df4e;
-  border-top: 1px solid rgba(245, 223, 78, 0.3);
-  border-bottom: 1px solid rgba(245, 223, 78, 0.3);
-  border-right: 1px solid rgba(245, 223, 78, 0.3);
+  background-color: rgba(253, 230, 138, 0.1);
+  border-left: 4px solid #fcd34d;
+  border-top: 1px solid rgba(253, 230, 138, 0.3);
+  border-bottom: 1px solid rgba(253, 230, 138, 0.3);
+  border-right: 1px solid rgba(253, 230, 138, 0.3);
 }
 
 .gold:hover {
-  background-color: rgba(245, 223, 78, 0.2);
-  border-color: #f5df4e;
+  background-color: rgba(253, 230, 138, 0.2);
+  border-color: #fcd34d;
 }
 
 .silver {
-  background-color: rgba(192, 192, 192, 0.1);
-  border-left: 4px solid #c0c0c0;
-  border-top: 1px solid rgba(192, 192, 192, 0.3);
-  border-bottom: 1px solid rgba(192, 192, 192, 0.3);
-  border-right: 1px solid rgba(192, 192, 192, 0.3);
+  background-color: rgba(209, 213, 219, 0.1);
+  border-left: 4px solid #9ca3af;
+  border-top: 1px solid rgba(209, 213, 219, 0.3);
+  border-bottom: 1px solid rgba(209, 213, 219, 0.3);
+  border-right: 1px solid rgba(209, 213, 219, 0.3);
 }
 
 .silver:hover {
-  background-color: rgba(192, 192, 192, 0.2);
-  border-color: #a0a0a0;
+  background-color: rgba(209, 213, 219, 0.2);
+  border-color: #9ca3af;
 }
 
 .imitation {
-  background-color: rgba(205, 127, 50, 0.1);
-  border-left: 4px solid #cd7f32;
-  border-top: 1px solid rgba(205, 127, 50, 0.3);
-  border-bottom: 1px solid rgba(205, 127, 50, 0.3);
-  border-right: 1px solid rgba(205, 127, 50, 0.3);
+  background-color: rgba(252, 165, 165, 0.1);
+  border-left: 4px solid #f87171;
+  border-top: 1px solid rgba(252, 165, 165, 0.3);
+  border-bottom: 1px solid rgba(252, 165, 165, 0.3);
+  border-right: 1px solid rgba(252, 165, 165, 0.3);
 }
 
 .imitation:hover {
-  background-color: rgba(205, 127, 50, 0.2);
-  border-color: #b56c28;
+  background-color: rgba(252, 165, 165, 0.2);
+  border-color: #f87171;
 }
 
-/* Additional color variations for more cards */
 .platinum {
-  background-color: rgba(229, 228, 226, 0.1);
-  border-left: 4px solid #e5e4e2;
+  background-color: rgba(199, 210, 254, 0.1);
+  border-left: 4px solid #818cf8;
 }
 
 .platinum:hover {
-  background-color: rgba(229, 228, 226, 0.2);
+  background-color: rgba(199, 210, 254, 0.2);
 }
 
 .diamond {
-  background-color: rgba(185, 242, 255, 0.1);
-  border-left: 4px solid #b9f2ff;
+  background-color: rgba(167, 243, 208, 0.1);
+  border-left: 4px solid #34d399;
 }
 
 .diamond:hover {
-  background-color: rgba(185, 242, 255, 0.2);
+  background-color: rgba(167, 243, 208, 0.2);
 }
 
 .ruby {
-  background-color: rgba(224, 17, 95, 0.1);
-  border-left: 4px solid #e0115f;
+  background-color: rgba(251, 207, 232, 0.1);
+  border-left: 4px solid #f472b6;
 }
 
 .ruby:hover {
-  background-color: rgba(224, 17, 95, 0.2);
+  background-color: rgba(251, 207, 232, 0.2);
 }
 
 /* Responsive Styles */

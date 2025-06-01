@@ -1,4 +1,4 @@
-/* Available.css - Jewelry Store Dashboard Redesign */
+/* AvailableStock.css - Jewelry Store Dashboard */
 
 :root {
   --primary: #6c5ce7;
@@ -10,12 +10,6 @@
   --gold: #ffd700;
   --silver: #c0c0c0;
   --imitation: #8B4513;
-  --platinum: #e5e4e2;
-  --diamond: #b9f2ff;
-  --ruby: #e0115f;
-  --emerald: #50c878;
-  --sapphire: #0f52ba;
-  --amethyst: #9966cc;
   --light: #f5f6fa;
   --dark: #2d3436;
   --text: #2d3436;
@@ -24,6 +18,10 @@
   --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   --shadow-hover: 0 8px 15px rgba(0, 0, 0, 0.15);
   --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  --status-high: #00b894;
+  --status-medium: #fdcb6e;
+  --status-low: #e17055;
+  --status-out: #d63031;
 }
 
 /* Main container styles */
@@ -38,12 +36,113 @@
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
 }
 
+/* Summary Cards */
+.summary-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 25px;
+  margin-bottom: 40px;
+}
+
+.summary-card {
+  background: white;
+  border-radius: 15px;
+  padding: 25px;
+  display: flex;
+  align-items: center;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2), 0 6px 6px rgba(0, 0, 0, 0.1);
+  transition: var(--transition);
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
+}
+.summary-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, rgba(108, 92, 231, 0.1) 0%, rgba(0, 206, 201, 0.1) 100%);
+  z-index: -1;
+  box-shadow: var(--shadow-x1);
+}
+
+.summary-card:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--shadow-hover);
+}
+
+.card-icon {
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 20px;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.card-icon .icon {
+  font-size: 30px;
+  color: var(--primary);
+}
+
+.card-content h3 {
+  margin: 0;
+  font-size: 1rem;
+  color: var(--text-light);
+  font-weight: 600;
+}
+
+.card-content p {
+  margin: 5px 0 0;
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--dark);
+}
+
+/* Specific card styles */
+.total-items .card-icon {
+  background: linear-gradient(135deg, rgba(108, 92, 231, 0.2) 0%, rgba(0, 206, 201, 0.2) 100%);
+}
+
+.total-items .icon {
+  color: var(--primary);
+}
+
+.gold-items .card-icon {
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.2) 0%, rgba(218, 165, 32, 0.2) 100%);
+}
+
+.gold-items .icon {
+  color: var(--gold);
+}
+
+.silver-items .card-icon {
+  background: linear-gradient(135deg, rgba(192, 192, 192, 0.2) 0%, rgba(168, 168, 168, 0.2) 100%);
+}
+
+.silver-items .icon {
+  color: var(--silver);
+}
+
+.low-stock .card-icon {
+  background: linear-gradient(135deg, rgba(230, 112, 85, 0.2) 0%, rgba(214, 48, 49, 0.2) 100%);
+}
+
+.low-stock .icon {
+  color: var(--danger);
+}
+
 /* Controls container */
 .controls-container {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 40px;
+  margin-bottom: 30px;
   flex-wrap: wrap;
   gap: 25px;
   padding: 15px;
@@ -52,7 +151,7 @@
   box-shadow: var(--shadow);
 }
 
-/* Tabs styling - Each tab with unique gemstone-inspired colors */
+/* Tabs styling */
 .tabs {
   display: flex;
   gap: 15px;
@@ -125,7 +224,7 @@
   background: linear-gradient(135deg, #c0c0c0 0%, #a8a8a8 100%);
 }
 
-.tab.imitation {
+.tab.emitation {
   background-color: var(--imitation);
   color: white;
 }
@@ -217,17 +316,109 @@
   100% { opacity: 0.6; }
 }
 
-/* Product grid */
-.product-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 30px;
-  margin-top: 30px;
+/* Product table */
+.product-table-container {
+  background: white;
+  border-radius: 15px;
+  padding: 20px;
+  box-shadow: var(--shadow);
+  overflow-x: auto;
+}
+
+.product-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+}
+
+.product-table th {
+  text-align: left;
+  padding: 15px;
+  background-color: #f8f9fa;
+  font-weight: 600;
+  color: black;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+  letter-spacing: 0.5px;
+  border-bottom: 2px solid var(--border);
+}
+
+.product-table td {
+  padding: 15px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+
+.product-row:hover {
+  background-color: #fff9e6;
+}
+
+/* Category badges */
+.category-badge {
+  display: inline-block;
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-align: center;
+  min-width: 70px;
+}
+
+.category-badge.gold {
+  background-color: rgba(255, 215, 0, 0.1);
+  color: #daa520;
+  border: 1px solid rgba(255, 215, 0, 0.3);
+}
+
+.category-badge.silver {
+  background-color: rgba(192, 192, 192, 0.1);
+  color: #a8a8a8;
+  border: 1px solid rgba(192, 192, 192, 0.3);
+}
+
+.category-badge.imitation {
+  background-color: rgba(139, 69, 19, 0.1);
+  color: #8B4513;
+  border: 1px solid rgba(139, 69, 19, 0.3);
+}
+
+/* Status badges */
+.status-badge {
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  min-width: 100px;
+  text-align: center;
+}
+
+.status-high {
+  background-color: rgba(0, 184, 148, 0.1);
+  color: var(--status-high);
+  border: 1px solid rgba(0, 184, 148, 0.3);
+}
+
+.status-medium {
+  background-color: rgba(253, 203, 110, 0.1);
+  color: var(--status-medium);
+  border: 1px solid rgba(253, 203, 110, 0.3);
+}
+
+.status-low {
+  background-color: rgba(225, 112, 85, 0.1);
+  color: var(--status-low);
+  border: 1px solid rgba(225, 112, 85, 0.3);
+}
+
+.status-out {
+  background-color: rgba(214, 48, 49, 0.1);
+  color: var(--status-out);
+  border: 1px solid rgba(214, 48, 49, 0.3);
 }
 
 /* No products message */
 .no-products {
-  grid-column: 1 / -1;
   text-align: center;
   padding: 60px;
   color: var(--text-light);
@@ -243,216 +434,10 @@
   display: block;
 }
 
-/* Product card - 3D effect with perspective */
-.product-card {
-  border: none;
-  border-radius: 15px;
-  overflow: hidden;
-  transition: var(--transition);
-  background-color: white;
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  box-shadow: var(--shadow);
-  transform-style: preserve-3d;
-  perspective: 1000px;
-  position: relative;
-}
-
-.product-card:hover {
-  transform: translateY(-10px) rotateX(5deg);
-  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
-}
-
-.product-card::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(135deg, rgba(108, 92, 231, 0.1) 0%, rgba(0, 206, 201, 0.1) 100%);
-  opacity: 0;
-  transition: var(--transition);
-  z-index: 0;
-}
-
-.product-card:hover::after {
-  opacity: 1;
-}
-
-.product-image-container {
-  position: relative;
-  height: 320px;
-  width: 100%;
-  overflow: hidden;
-  background: linear-gradient(135deg, #f8f8f8 0%, #f0f0f0 100%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1;
-}
-
-.product-image {
-  width: auto;
-  height: auto;
-  max-width: 90vh;
-  max-height: 90vh;
-  object-fit: contain;
-  transition: var(--transition);
-  filter: drop-shadow(0 5px 10px rgba(0, 0, 0, 0.1));
-  transform: translateZ(20px);
-}
-
-.product-card:hover .product-image {
-  transform: scale(1.1) translateZ(50px);
-  filter: drop-shadow(0 10px 15px rgba(0, 0, 0, 0.2));
-}
-
-/* Gemstone badges with shine effect */
-.product-badge {
-  position: absolute;
-  top: 15px;
-  right: 15px;
-  padding: 6px 15px;
-  border-radius: 20px;
-  font-size: 0.8rem;
-  font-weight: bold;
-  color: white;
-  z-index: 2;
-  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.16);
-  transition: var(--transition);
-  overflow: hidden;
-}
-
-.product-badge::before {
-  content: '';
-  position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  background: linear-gradient(
-    to bottom right,
-    rgba(255, 255, 255, 0) 0%,
-    rgba(255, 255, 255, 0) 45%,
-    rgba(255, 255, 255, 0.5) 48%,
-    rgba(255, 255, 255, 0.8) 50%,
-    rgba(255, 255, 255, 0.5) 52%,
-    rgba(255, 255, 255, 0) 57%,
-    rgba(255, 255, 255, 0) 100%
-  );
-  transform: rotate(30deg);
-  animation: shine 2s infinite;
-}
-
-@keyframes shine {
-  0% { transform: translateX(-100%) rotate(30deg); }
-  20% { transform: translateX(100%) rotate(30deg); }
-  100% { transform: translateX(100%) rotate(30deg); }
-}
-
-.product-badge.gold {
-  background: linear-gradient(135deg, #ffd700 0%, #daa520 100%);
-  color: #333;
-}
-
-.product-badge.silver {
-  background: linear-gradient(135deg, #c0c0c0 0%, #a8a8a8 100%);
-  color: #333;
-}
-
-.product-badge.imitation {
-  background: linear-gradient(135deg, #894515 0%, #5D2906 100%);
-  color: rgb(92, 87, 87);
-}
-
-.product-details {
-  padding: 20px;
-  flex-grow: 1;
-  display: flex;
-  flex-direction: column;
-  z-index: 1;
-  background: white;
-}
-
-.product-name {
-  margin: 0 0 12px 0;
-  font-size: 1.3rem;
-  color: var(--dark);
-  font-weight: 600;
-}
-
-.product-description {
-  font-size: 0.95rem;
-  color: var(--text-light);
-  margin-bottom: 20px;
-  line-height: 1.5;
-  flex-grow: 1;
-}
-
-.product-price-rating {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-}
-
-.price {
-  font-weight: 700;
-  font-size: 1.3rem;
-  color: var(--primary-dark);
-  display: flex;
-  align-items: center;
-  gap: 5px;
-}
-
-.price::before {
-  content: '₹';
-  font-size: 0.9em;
-}
-
-.rating {
-  display: flex;
-  gap: 3px;
-}
-
-.star-filled {
-  color: var(--gold);
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-}
-
-.star-empty {
-  color: var(--border);
-}
-
-.product-stock {
-  font-size: 0.95rem;
-  font-weight: 500;
-  padding: 8px 12px;
-  border-radius: 20px;
-  align-self: flex-start;
-}
-
-.in-stock {
-  background-color: rgba(0, 184, 148, 0.1);
-  color: var(--success);
-}
-
-.low-stock {
-  background-color: rgba(253, 203, 110, 0.1);
-  color: #e67e22;
-}
-
-.out-of-stock {
-  background-color: rgba(214, 48, 49, 0.1);
-  color: var(--danger);
-}
-
 /* Responsive adjustments */
 @media (max-width: 1200px) {
-  .product-grid {
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  .summary-cards {
+    grid-template-columns: repeat(2, 1fr);
   }
 }
 
@@ -478,71 +463,27 @@
     flex: 0 0 auto;
   }
   
-  .product-grid {
-    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-    gap: 20px;
-  }
-  
-  .product-image-container {
-    height: 280px;
+  .summary-cards {
+    grid-template-columns: 1fr;
   }
 }
 
 @media (max-width: 480px) {
-  .product-grid {
-    grid-template-columns: 1fr;
-  }
-  
-  .product-image-container {
-    height: 250px;
+  .product-table th, 
+  .product-table td {
+    padding: 10px 8px;
+    font-size: 0.85rem;
   }
   
   .tab {
     padding: 10px 15px;
     font-size: 0.9rem;
   }
-}
-
-/* Dark mode styles */
-.dark-mode .jewelry-store-panel {
-  background: linear-gradient(135deg, #1e272e 0%, #2d3436 100%);
-  color: #f5f6fa;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-}
-
-.dark-mode .controls-container,
-.dark-mode .no-products,
-.dark-mode .product-card,
-.dark-mode .product-details,
-.dark-mode .sort-container {
-  background-color: #2d3436;
-  color: #f5f6fa;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-}
-
-.dark-mode .product-name {
-  color: #f5f6fa;
-}
-
-.dark-mode .product-description {
-  color: #b2bec3;
-}
-
-.dark-mode .product-image-container {
-  background: linear-gradient(135deg, #3c4852 0%, #2d3436 100%);
-}
-
-.dark-mode .tab {
-  background-color: #3c4852;
-  color: #f5f6fa;
-}
-
-.dark-mode .sort-container select {
-  background-color: #3c4852;
-  color: #f5f6fa;
-  border-color: #4b5a65;
-}
-
-.dark-mode .star-empty {
-  color: #4b5a65;
+  
+  .category-badge,
+  .status-badge {
+    min-width: auto;
+    padding: 4px 8px;
+    font-size: 0.75rem;
+  }
 }

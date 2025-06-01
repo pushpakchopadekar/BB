@@ -4,6 +4,8 @@ import { database } from '../../firebase';
 import { ref, onValue, off, remove, update } from 'firebase/database';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { jsPDF } from 'jspdf';
+import 'jspdf-autotable';
 
 const RegisteredProducts = () => {
   const [products, setProducts] = useState([]);
@@ -20,7 +22,6 @@ const RegisteredProducts = () => {
   const [productToDelete, setProductToDelete] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Fetch products from Firebase
   useEffect(() => {
     const productsRef = ref(database, 'products');
     
@@ -91,39 +92,33 @@ const RegisteredProducts = () => {
 
     fetchProducts();
 
-    // Cleanup function to remove the listener when component unmounts
     return () => {
       off(productsRef);
     };
   }, []);
 
-  // Categories for tabs
   const categories = ['All', 'Gold', 'Silver', 'Emitation'];
 
-  // Filter and sort products
   useEffect(() => {
     let result = [...products];
 
-    // Apply search filter
     if (searchTerm) {
       result = result.filter(p => 
         p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         (p.barcode && p.barcode.toLowerCase().includes(searchTerm.toLowerCase()))
-  )}
+      );
+    }
 
-    // Apply category filter
     if (categoryFilter !== 'All') {
       result = result.filter(p => p.category === categoryFilter);
     }
 
-    // Apply stock filter
     if (stockFilter === 'Low') {
       result = result.filter(p => p.stock < 5);
     } else if (stockFilter === 'Out') {
       result = result.filter(p => p.stock === 0);
     }
 
-    // Apply sorting
     switch(sortOption) {
       case 'name-asc':
         result.sort((a, b) => a.name.localeCompare(b.name));
@@ -142,16 +137,14 @@ const RegisteredProducts = () => {
     }
 
     setFilteredProducts(result);
-    setCurrentPage(1); // Reset to first page when filters change
+    setCurrentPage(1);
   }, [products, searchTerm, categoryFilter, stockFilter, sortOption]);
 
-  // Pagination logic
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = filteredProducts.slice(indexOfFirstItem, indexOfLastItem);
   const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
 
-  // Handle product selection
   const toggleProductSelection = (id) => {
     setSelectedProducts(prev =>
       prev.includes(id)
@@ -160,7 +153,6 @@ const RegisteredProducts = () => {
     );
   };
 
-  // Handle select all on current page
   const toggleSelectAll = () => {
     if (selectedProducts.length === currentItems.length) {
       setSelectedProducts([]);
@@ -169,7 +161,6 @@ const RegisteredProducts = () => {
     }
   };
 
-  // Handle delete product
   const handleDelete = (id) => {
     setProductToDelete(id);
     setShowDeleteConfirm(true);
@@ -206,7 +197,6 @@ const RegisteredProducts = () => {
     }
   };
 
-  // Handle bulk delete
   const handleBulkDelete = async () => {
     try {
       const deletePromises = selectedProducts.map(id => 
@@ -239,8 +229,7 @@ const RegisteredProducts = () => {
     }
   };
 
-  // Handle export products
-  const handleExport = () => {
+  const handleExport = (type) => {
     const dataToExport = filteredProducts.map(product => ({
       'Product Name': product.name,
       'Barcode': product.barcode,
@@ -249,21 +238,25 @@ const RegisteredProducts = () => {
       'Stock': product.stock
     }));
 
-    const csvContent = [
-      Object.keys(dataToExport[0]).join(','),
-      ...dataToExport.map(item => Object.values(item).join(','))
-    ].join('\n');
+    if (type === 'csv') {
+      const csvContent = [
+        Object.keys(dataToExport[0]).join(','),
+        ...dataToExport.map(item => Object.values(item).join(','))
+      ].join('\n');
 
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.setAttribute('href', url);
-    link.setAttribute('download', `products_export_${new Date().toISOString().slice(0, 10)}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.setAttribute('href', url);
+      link.setAttribute('download', `products_export_${new Date().toISOString().slice(0, 10)}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } else if (type === 'pdf') {
+      generatePDF(dataToExport);
+    }
 
-    toast.success('Export completed successfully!', {
+    toast.success(`Export to ${type.toUpperCase()} completed successfully!`, {
       position: "top-right",
       autoClose: 3000,
       hideProgressBar: false,
@@ -275,7 +268,42 @@ const RegisteredProducts = () => {
     });
   };
 
-  // Handle save edited product
+  const generatePDF = (data) => {
+    const doc = new jsPDF();
+    
+    // Add title
+    doc.setFontSize(18);
+    doc.setTextColor(40);
+    doc.text('Products Report', 105, 15, { align: 'center' });
+    
+    // Add date
+    doc.setFontSize(10);
+    doc.text(`Generated on: ${new Date().toLocaleString()}`, 105, 22, { align: 'center' });
+    
+    // Add table
+    const headers = [Object.keys(data[0])];
+    const rows = data.map(item => Object.values(item));
+    
+    doc.autoTable({
+      head: headers,
+      body: rows,
+      startY: 30,
+      theme: 'grid',
+      headStyles: {
+        fillColor: [249, 115, 22],
+        textColor: 255,
+        fontStyle: 'bold'
+      },
+      alternateRowStyles: {
+        fillColor: [255, 247, 237]
+      },
+      margin: { top: 30 }
+    });
+    
+    // Save the PDF
+    doc.save(`products_export_${new Date().toISOString().slice(0, 10)}.pdf`);
+  };
+
   const saveEditedProduct = async (product) => {
     try {
       const productRef = ref(database, `products/${product.id}`);
@@ -287,6 +315,16 @@ const RegisteredProducts = () => {
         weight: product.weight || null
       });
       setEditingProduct(null);
+      toast.success('Product updated successfully!', {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
+        theme: "colored",
+      });
     } catch (error) {
       console.error('Error updating product:', error);
       toast.error('Failed to update product!', {
@@ -304,9 +342,7 @@ const RegisteredProducts = () => {
 
   return (
     <div className="registered-products">
-      <h2>Registered Products</h2>
-
-      {/* Category Tabs with Export Button */}
+      
       <div className="tabs-export-container">
         <div className="category-tabs">
           {categories.map(cat => (
@@ -319,15 +355,22 @@ const RegisteredProducts = () => {
             </button>
           ))}
         </div>
-        <button
-          className="export-btn"
-          onClick={handleExport}
-        >
-          ⬇️ Export
-        </button>
+        <div className="export-buttons">
+          <button
+            className="export-btn"
+            onClick={() => handleExport('csv')}
+          >
+            <span className="export-icon">📊</span> Export Excel
+          </button>
+          <button
+            className="export-btn"
+            onClick={() => handleExport('pdf')}
+          >
+            <span className="export-icon">📄</span> Export PDF
+          </button>
+        </div>
       </div>
 
-      {/* Search & Filter Section */}
       <div className="products-filters">
         <div className="search-bar">
           <input
@@ -365,7 +408,6 @@ const RegisteredProducts = () => {
         </div>
       </div>
 
-      {/* Product Table */}
       <div className="products-table-container">
         <table className="products-table">
           <thead>
@@ -425,18 +467,20 @@ const RegisteredProducts = () => {
                     </span>
                   </td>
                   <td>
-                    <button 
-                      className="edit-btn"
-                      onClick={() => setEditingProduct(product)}
-                    >
-                      Edit
-                    </button>
-                    <button 
-                      className="delete-btn"
-                      onClick={() => handleDelete(product.id)}
-                    >
-                      Delete
-                    </button>
+                    <div className="action-buttons">
+                      <button 
+                        className="edit-btn"
+                        onClick={() => setEditingProduct(product)}
+                      >
+                        Edit
+                      </button>
+                      <button 
+                        className="delete-btn"
+                        onClick={() => handleDelete(product.id)}
+                      >
+                        Delete
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))
@@ -451,7 +495,6 @@ const RegisteredProducts = () => {
         </table>
       </div>
 
-      {/* Bulk Actions & Pagination */}
       <div className="products-footer">
         {selectedProducts.length > 0 && (
           <div className="bulk-actions">
@@ -497,7 +540,6 @@ const RegisteredProducts = () => {
         </div>
       </div>
 
-      {/* Delete Confirmation Modal */}
       {showDeleteConfirm && (
         <div className="modal-overlay">
           <div className="confirm-modal">
@@ -521,7 +563,6 @@ const RegisteredProducts = () => {
         </div>
       )}
 
-      {/* Edit Product Modal */}
       {editingProduct && (
         <div className="modal-overlay">
           <div className="edit-modal">
@@ -592,19 +633,7 @@ const RegisteredProducts = () => {
                 </button>
                 <button 
                   className="save-btn"
-                  onClick={() => {
-                    saveEditedProduct(editingProduct);
-                    toast.success('Product updated successfully!', {
-                      position: "top-right",
-                      autoClose: 3000,
-                      hideProgressBar: false,
-                      closeOnClick: true,
-                      pauseOnHover: true,
-                      draggable: true,
-                      progress: undefined,
-                      theme: "colored",
-                    });
-                  }}
+                  onClick={() => saveEditedProduct(editingProduct)}
                 >
                   Save Changes
                 </button>
