@@ -6,6 +6,7 @@ import StartSale from '../SaleProcess/SaleProcess';
 import SalesHistory from '../SalesHistory/SalesHistory';
 import SalesOverview from '../SalesOverview/SalesOverview';
 import AvailableStock from '../AvailableStock/AvailableStock';
+import StockAlert from '../StockAlert/StockAlert';
 import { Bar, Line, Pie } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, PointElement, LineElement, ArcElement } from 'chart.js';
 
@@ -29,6 +30,7 @@ import {
   Printer, TrendingUp, AlertCircle, Clock, Calendar, FileText,
   User, Lock, Camera, CheckCircle, XCircle, ChevronDown, Menu, X
 } from 'lucide-react';
+
 
 const Dashboard = ({ onLogout }) => {
   const [darkMode, setDarkMode] = useState(false);
@@ -585,12 +587,8 @@ const Dashboard = ({ onLogout }) => {
       case 'Sales Overview':
         return <SalesOverview />;
       case 'Stock Alert':
-        return (
-          <div className="coming-soon">
-            <h2><AlertTriangle size={48} /> Stock Alert System</h2>
-            <p>Intelligent stock monitoring and alerts coming soon!</p>
-          </div>
-        );
+        return <StockAlert />
+        
       default:
         return (
           <div className="coming-soon">

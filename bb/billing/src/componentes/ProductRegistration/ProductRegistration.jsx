@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import { push, ref, set } from 'firebase/database';
 import JsBarcode from 'jsbarcode';
+import { useState } from 'react';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import '../ProductRegistration/ProductRegistration.css';
 import { database } from '../../firebase';
-import { ref, push, set } from 'firebase/database';
+import '../ProductRegistration/ProductRegistration.css';
 
 const ProductRegistration = () => {
   const [product, setProduct] = useState({
@@ -510,25 +510,30 @@ const ProductRegistration = () => {
                   {previewImage ? (
                     <img src={previewImage} alt="Product preview" className="preview-image" />
                   ) : (
-                    <div className="placeholder">
-                      <div className="placeholder-icon">📷</div>
-                      <p>No image selected</p>
-                    </div>
+                    <label className="image-upload-label">
+                      <div className="placeholder">
+                        <div className="placeholder-icon">📷</div>
+                        <p>Click to upload image</p>
+                        <input 
+                          type="file" 
+                          accept="image/*"
+                          onChange={handleImageUpload}
+                          style={{ display: 'none' }}
+                        />
+                      </div>
+                    </label>
                   )}
                 </div>
-                <div className="upload-controls">
-                  <label className="upload-btn pulse">
-                    <span className="upload-icon">⬆️</span>
-                    Upload Image
-                    <input 
-                      type="file" 
-                      accept="image/*"
-                      onChange={handleImageUpload}
-                      style={{ display: 'none' }}
-                    />
-                  </label>
-                  <p className="upload-hint">Maximum file size: 2MB</p>
-                </div>
+                {previewImage && (
+                  <button 
+                    type="button" 
+                    className="change-image-btn"
+                    onClick={() => document.querySelector('.image-upload-label input').click()}
+                  >
+                    Change Image
+                  </button>
+                )}
+                <p className="upload-hint">Maximum file size: 2MB</p>
               </div>
             </div>
 
@@ -557,7 +562,7 @@ const ProductRegistration = () => {
                     <div className="barcode-image-container">
                       <img src={barcodeImage} alt="Barcode" className="barcode-image" />
                     </div>
-                    <div className="barcode-info">
+                    {/* <div className="barcode-info">
                       <h4>Product Information</h4>
                       <p><strong>Barcode:</strong> {barcode}</p>
                       <p><strong>Name:</strong> {product.name}</p>
@@ -567,7 +572,7 @@ const ProductRegistration = () => {
                       ) : (
                         <p><strong>Price:</strong> ₹{product.sellingPrice}</p>
                       )}
-                    </div>
+                    </div> */}
                   </div>
                   <div className="barcode-actions">
                     <button 

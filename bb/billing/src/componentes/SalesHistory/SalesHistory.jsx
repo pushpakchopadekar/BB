@@ -8,34 +8,9 @@ import { database } from '../../firebase';
 import { ref, onValue, off } from 'firebase/database';
 import './SalesHistory.css';
 
-// Toast function
-const showToast = (message, type = 'success') => {
-  const colors = {
-    success: 'linear-gradient(to right, #00b09b, #96c93d)',
-    error: 'linear-gradient(to right, #ff416c, #ff4b2b)',
-    info: 'linear-gradient(to right, #4b6cb7, #182848)',
-    warning: 'linear-gradient(to right, #f46b45, #eea849)'
-  };
-
-  const toast = new window.Toastify({
-    text: message,
-    duration: 3000,
-    gravity: "top",
-    position: "right",
-    style: {
-      background: colors[type] || colors.success,
-      color: "white",
-      boxShadow: "0 4px 8px rgba(0,0,0,0.2)"
-    }
-  });
-  toast.showToast();
-};
-
 const SalesHistory = () => {
   const [salesData, setSalesData] = useState([]);
   const [loading, setLoading] = useState(true);
-
-  // State for filters and modal
   const [filters, setFilters] = useState({
     startDate: '',
     endDate: '',
@@ -43,9 +18,22 @@ const SalesHistory = () => {
     statusFilter: 'All',
     categoryFilter: 'All'
   });
-
   const [selectedInvoice, setSelectedInvoice] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [toastMessages, setToastMessages] = useState([]);
+
+  // Show toast message
+  const showToast = (message, type = 'success') => {
+    const newToast = {
+      id: Date.now(),
+      message,
+      type
+    };
+    setToastMessages(prev => [...prev, newToast]);
+    setTimeout(() => {
+      setToastMessages(prev => prev.filter(toast => toast.id !== newToast.id));
+    }, 3000);
+  };
 
   // Fetch sales data from Firebase
   useEffect(() => {
@@ -55,11 +43,9 @@ const SalesHistory = () => {
       onValue(salesRef, (snapshot) => {
         const data = snapshot.val();
         if (data) {
-          // Convert object to array
           const salesArray = Object.keys(data).map(key => ({
             id: key,
             ...data[key],
-            // Ensure we have all required fields with defaults
             date: data[key].date || new Date().toISOString().split('T')[0],
             customer: data[key].customer?.name || 'Anonymous Customer',
             phone: data[key].customer?.phone || 'N/A',
@@ -85,20 +71,10 @@ const SalesHistory = () => {
     };
 
     fetchSalesData();
-
-    // Initialize Toastify
-    const script = document.createElement('script');
-    script.src = 'https://cdn.jsdelivr.net/npm/toastify-js';
-    document.body.appendChild(script);
-
-    // Cleanup function
-    return () => {
-      off(salesRef);
-      document.body.removeChild(script);
-    };
+    return () => off(salesRef);
   }, []);
 
-  // Filter data with useMemo
+  // Filter data
   const filteredData = useMemo(() => {
     return salesData.filter(sale => {
       const date = new Date(sale.date);
@@ -140,7 +116,7 @@ const SalesHistory = () => {
         Cell: ({ row }) => (
           <button 
             className="invoice-link"
-            onClick={() => handleViewInvoice(row.original.id)}
+            onClick={() => handleViewInvoice(row.original)}
           >
             {row.original.id}
           </button>
@@ -151,9 +127,7 @@ const SalesHistory = () => {
         Header: 'Date',
         accessor: 'date',
         Cell: ({ value }) => new Date(value).toLocaleDateString('en-IN'),
-        sortType: (a, b) => {
-          return new Date(a.original.date) - new Date(b.original.date);
-        }
+        sortType: (a, b) => new Date(a.original.date) - new Date(b.original.date)
       },
       {
         Header: 'Customer Name',
@@ -193,7 +167,7 @@ const SalesHistory = () => {
           <div className="action-buttons">
             <button 
               className="view-btn"
-              onClick={() => handleViewInvoice(row.original.id)}
+              onClick={() => handleViewInvoice(row.original)}
               title="View Invoice"
             >
               🔍
@@ -214,6 +188,20 @@ const SalesHistory = () => {
   );
 
   // Table instance
+  const tableInstance = useTable(
+    {
+      columns,
+      data: filteredData,
+      initialState: { 
+        pageIndex: 0, 
+        pageSize: 10,
+        sortBy: [{ id: 'date', desc: true }]
+      }
+    },
+    useSortBy,
+    usePagination
+  );
+
   const {
     getTableProps,
     getTableBodyProps,
@@ -229,32 +217,16 @@ const SalesHistory = () => {
     previousPage,
     setPageSize,
     state: { pageIndex, pageSize, sortBy }
-  } = useTable(
-    {
-      columns,
-      data: filteredData,
-      initialState: { 
-        pageIndex: 0, 
-        pageSize: 10,
-        sortBy: [{ id: 'date', desc: true }]
-      }
-    },
-    useSortBy,
-    usePagination
-  );
+  } = tableInstance;
 
-  // Handlers with useCallback
-  const handleViewInvoice = useCallback((invoiceId) => {
-    const invoice = salesData.find(sale => sale.id === invoiceId);
-    if (invoice) {
-      setSelectedInvoice(invoice);
-      setIsModalOpen(true);
-      showToast(`Invoice ${invoiceId} details opened`, 'info');
-    } else {
-      showToast('Invoice not found', 'error');
-    }
-  }, [salesData]);
+  // View invoice details
+  const handleViewInvoice = useCallback((invoice) => {
+    setSelectedInvoice(invoice);
+    setIsModalOpen(true);
+    showToast(`Invoice ${invoice.id} details opened`, 'info');
+  }, []);
 
+  // Handle filter changes
   const handleFilterChange = useCallback((e) => {
     const { name, value } = e.target;
     setFilters(prev => ({
@@ -263,6 +235,7 @@ const SalesHistory = () => {
     }));
   }, []);
 
+  // Handle category change
   const handleCategoryChange = useCallback((category) => {
     setFilters(prev => ({
       ...prev,
@@ -308,7 +281,7 @@ const SalesHistory = () => {
           `₹${(item.totalPrice || (item.quantity * (item.currentRate || item.rate || 0))).toFixed(2)}`
         ]),
         styles: { fontSize: 10 },
-        headStyles: { fillColor: [212, 175, 55] } // Gold color
+        headStyles: { fillColor: [212, 175, 55] }
       });
       
       // Add totals
@@ -353,7 +326,7 @@ const SalesHistory = () => {
           sale.status
         ]),
         styles: { fontSize: 10 },
-        headStyles: { fillColor: [212, 175, 55] } // Gold color
+        headStyles: { fillColor: [212, 175, 55] }
       });
       
       // Save the PDF
@@ -382,7 +355,7 @@ const SalesHistory = () => {
     }
   }, []);
 
-  // Get unique categories from sales data
+  // Get unique categories
   const categories = useMemo(() => {
     const allCategories = ['All', ...new Set(salesData.map(sale => sale.category))];
     return allCategories.filter(cat => cat && cat !== 'All');
@@ -394,6 +367,15 @@ const SalesHistory = () => {
 
   return (
     <div className="sales-history">
+      {/* Toast messages */}
+      <div className="toast-container">
+        {toastMessages.map(toast => (
+          <div key={toast.id} className={`toast toast-${toast.type}`}>
+            {toast.message}
+          </div>
+        ))}
+      </div>
+
       {/* Header Section */}
       <div className="sales-history-header">
         <h1>Sales History</h1>

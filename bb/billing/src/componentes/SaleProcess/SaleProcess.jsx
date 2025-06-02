@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import '../SaleProcess/SaleProcess.css';
 import { database } from '../../firebase';
-import { ref, onValue, off, push } from 'firebase/database';
+import { ref, onValue, off, push, set } from 'firebase/database';
 
 const StartSale = ({ goldRate, silverRate }) => {
   // Customer state
@@ -19,6 +19,9 @@ const StartSale = ({ goldRate, silverRate }) => {
   const [activeStep, setActiveStep] = useState(1);
   const [showInvoicePreview, setShowInvoicePreview] = useState(false);
 
+  // Invoice number state
+  const [lastInvoiceNumber, setLastInvoiceNumber] = useState(0);
+
   // Summary state
   const [summary, setSummary] = useState({
     subtotal: 0,
@@ -34,7 +37,7 @@ const StartSale = ({ goldRate, silverRate }) => {
     deliveryDate: '',
     invoiceDate: new Date().toISOString().split('T')[0],
     invoiceMonth: new Date().toLocaleString('default', { month: 'long' }),
-    invoiceNumber: `INV-${Math.floor(1000 + Math.random() * 9000)}`
+    invoiceNumber: ''
   });
 
   // Product form state
@@ -47,6 +50,7 @@ const StartSale = ({ goldRate, silverRate }) => {
     currentRate: goldRate,
     makingCharge: '',
     makingChargeType: 'percentage',
+    sellingPrice: '', // New field for imitation products
     gst: 3,
     totalPrice: 0
   });
@@ -57,9 +61,10 @@ const StartSale = ({ goldRate, silverRate }) => {
 
   const barcodeInputRef = useRef(null);
 
-  // Fetch products from Firebase on component mount
+  // Fetch products and last invoice number from Firebase on component mount
   useEffect(() => {
     const productsRef = ref(database, 'products');
+    const invoiceCounterRef = ref(database, 'invoiceCounter');
     
     const fetchProducts = () => {
       onValue(productsRef, (snapshot) => {
@@ -80,19 +85,52 @@ const StartSale = ({ goldRate, silverRate }) => {
       });
     };
 
+    // Fetch last invoice number
+    onValue(invoiceCounterRef, (snapshot) => {
+      const counter = snapshot.val();
+      if (counter) {
+        setLastInvoiceNumber(counter.lastNumber || 0);
+        setSummary(prev => ({
+          ...prev,
+          invoiceNumber: generateInvoiceNumber(counter.lastNumber + 1)
+        }));
+      } else {
+        setSummary(prev => ({
+          ...prev,
+          invoiceNumber: generateInvoiceNumber(1)
+        }));
+      }
+    }, (error) => {
+      console.error('Error fetching invoice counter:', error);
+      setSummary(prev => ({
+        ...prev,
+        invoiceNumber: generateInvoiceNumber(1)
+      }));
+    });
+
     fetchProducts();
 
     return () => {
       off(productsRef);
+      off(invoiceCounterRef);
     };
   }, []);
+
+  // Generate sequential invoice number
+  const generateInvoiceNumber = (number) => {
+    const now = new Date();
+    const year = now.getFullYear().toString().slice(-2);
+    const month = (now.getMonth() + 1).toString().padStart(2, '0');
+    const day = now.getDate().toString().padStart(2, '0');
+    return `INV-${year}${month}${day}-${number.toString().padStart(4, '0')}`;
+  };
 
   // Calculate totals whenever cart changes
   useEffect(() => {
     calculateTotals();
   }, [cart, summary.discount, summary.discountType, summary.amountPaid]);
 
-  // Focus barcode input on component mount
+  // Focus barcode input on component mount and when returning to step 1
   useEffect(() => {
     if (barcodeInputRef.current && activeStep === 1) {
       barcodeInputRef.current.focus();
@@ -118,7 +156,7 @@ const StartSale = ({ goldRate, silverRate }) => {
           prev.currentRate
       };
       
-      if (['category', 'weight', 'currentRate', 'makingCharge', 'makingChargeType'].includes(name)) {
+      if (['category', 'weight', 'currentRate', 'makingCharge', 'makingChargeType', 'sellingPrice'].includes(name)) {
         updatedForm.totalPrice = calculateProductPrice(updatedForm);
       }
       
@@ -127,9 +165,9 @@ const StartSale = ({ goldRate, silverRate }) => {
   };
 
   const calculateProductPrice = (product) => {
-    if (!product.weight || isNaN(product.weight)) return 0;
-
     if (product.category === 'Gold' || product.category === 'Silver') {
+      if (!product.weight || isNaN(product.weight)) return 0;
+      
       const metalValue = product.weight * product.currentRate;
 
       let makingCharges = 0;
@@ -145,8 +183,9 @@ const StartSale = ({ goldRate, silverRate }) => {
       const gstAmount = subtotal * (product.gst / 100);
       return subtotal + gstAmount;
     } else {
-      if (!product.makingCharge || isNaN(product.makingCharge)) return 0;
-      const price = parseFloat(product.makingCharge);
+      // For imitation products, use sellingPrice directly
+      if (!product.sellingPrice || isNaN(product.sellingPrice)) return 0;
+      const price = parseFloat(product.sellingPrice);
       return price + (price * (product.gst / 100));
     }
   };
@@ -178,16 +217,19 @@ const StartSale = ({ goldRate, silverRate }) => {
       const scannedProduct = products.find(p => p.barcode === productForm.barcode);
       
       if (scannedProduct) {
+        const isImitation = scannedProduct.category === 'Imitation';
+        
         setProductForm({
           barcode: scannedProduct.barcode,
           productId: scannedProduct.id,
           productName: scannedProduct.name,
           category: scannedProduct.category || 'Gold',
-          weight: scannedProduct.weight,
+          weight: isImitation ? '' : scannedProduct.weight,
           currentRate: scannedProduct.category === 'Gold' ? goldRate : 
                       scannedProduct.category === 'Silver' ? silverRate : 0,
-          makingCharge: scannedProduct.makingCharge || '',
-          makingChargeType: scannedProduct.makingChargeType || 'percentage',
+          makingCharge: isImitation ? '' : (scannedProduct.makingCharge || ''),
+          makingChargeType: isImitation ? 'percentage' : (scannedProduct.makingChargeType || 'percentage'),
+          sellingPrice: isImitation ? (scannedProduct.sellingPrice || '') : '',
           gst: 3,
           totalPrice: 0
         });
@@ -210,14 +252,21 @@ const StartSale = ({ goldRate, silverRate }) => {
       return;
     }
 
-    if (!productForm.weight || isNaN(productForm.weight)) {
-      alert('Please enter a valid weight!');
-      return;
-    }
+    if (productForm.category === 'Gold' || productForm.category === 'Silver') {
+      if (!productForm.weight || isNaN(productForm.weight)) {
+        alert('Please enter a valid weight!');
+        return;
+      }
 
-    if (!productForm.makingCharge || isNaN(productForm.makingCharge)) {
-      alert('Please enter valid making charges!');
-      return;
+      if (!productForm.makingCharge || isNaN(productForm.makingCharge)) {
+        alert('Please enter valid making charges!');
+        return;
+      }
+    } else {
+      if (!productForm.sellingPrice || isNaN(productForm.sellingPrice)) {
+        alert('Please enter valid selling price!');
+        return;
+      }
     }
 
     const productToAdd = {
@@ -226,10 +275,13 @@ const StartSale = ({ goldRate, silverRate }) => {
       barcode: productForm.barcode,
       productName: productForm.productName,
       category: productForm.category,
-      weight: parseFloat(productForm.weight),
+      weight: productForm.category === 'Gold' || productForm.category === 'Silver' ? 
+              parseFloat(productForm.weight) : 0,
       currentRate: parseFloat(productForm.currentRate),
-      makingCharge: parseFloat(productForm.makingCharge),
+      makingCharge: productForm.category === 'Gold' || productForm.category === 'Silver' ? 
+                   parseFloat(productForm.makingCharge) : 0,
       makingChargeType: productForm.makingChargeType,
+      sellingPrice: productForm.category === 'Imitation' ? parseFloat(productForm.sellingPrice) : 0,
       gst: productForm.gst,
       totalPrice: parseFloat(productForm.totalPrice.toFixed(2)),
       image: products.find(p => p.id === productForm.productId)?.image || ''
@@ -249,6 +301,7 @@ const StartSale = ({ goldRate, silverRate }) => {
       currentRate: goldRate,
       makingCharge: '',
       makingChargeType: 'percentage',
+      sellingPrice: '',
       gst: 3,
       totalPrice: 0
     });
@@ -292,19 +345,28 @@ const StartSale = ({ goldRate, silverRate }) => {
 
   const saveInvoiceToHistory = async (invoiceData) => {
     try {
-      const invoicesRef = ref(database, 'invoices');
-      await push(invoicesRef, invoiceData);
-      console.log('Invoice saved to history');
+      // Update invoice counter first
+      const newInvoiceNumber = lastInvoiceNumber + 1;
+      await set(ref(database, 'invoiceCounter'), { lastNumber: newInvoiceNumber });
+      
+      // Save the invoice to sales history
+      const invoicesRef = ref(database, 'sales');
+      const newInvoiceRef = push(invoicesRef);
+      await set(newInvoiceRef, invoiceData);
+      
+      console.log('Invoice saved to sales history');
+      return true;
     } catch (error) {
       console.error('Error saving invoice:', error);
+      return false;
     }
   };
 
-  const generateInvoice = () => {
+  const generateInvoice = async () => {
     const invoiceData = {
       customer: {
         ...customer,
-        id: Date.now()
+        id: Date.now().toString()
       },
       items: cart.map(item => ({
         ...item,
@@ -315,23 +377,30 @@ const StartSale = ({ goldRate, silverRate }) => {
       })),
       summary: {
         ...summary,
-        invoiceNumber: `INV-${Date.now()}`,
+        invoiceNumber: summary.invoiceNumber,
         date: summary.invoiceDate,
         month: summary.invoiceMonth,
         discountAmount: summary.discountType === 'percentage' 
           ? summary.subtotal * (summary.discount / 100)
-          : parseFloat(summary.discount)
+          : parseFloat(summary.discount),
+        timestamp: Date.now(),
+        status: summary.balanceDue > 0 ? 'Pending' : 'Paid'
       },
-      timestamp: Date.now()
+      status: 'completed',
+      createdAt: new Date().toISOString()
     };
 
-    console.log('Invoice Data:', invoiceData);
-    saveInvoiceToHistory(invoiceData);
-    setShowInvoicePreview(true);
+    const success = await saveInvoiceToHistory(invoiceData);
+    
+    if (success) {
+      setShowInvoicePreview(true);
+    } else {
+      alert('Failed to save invoice. Please try again.');
+    }
   };
 
-  const closeInvoicePreview = () => {
-    // Reset form
+  const completeSale = () => {
+    // Reset the entire sale process
     setCustomer({
       name: '',
       phone: '',
@@ -354,7 +423,7 @@ const StartSale = ({ goldRate, silverRate }) => {
       deliveryDate: '',
       invoiceDate: new Date().toISOString().split('T')[0],
       invoiceMonth: new Date().toLocaleString('default', { month: 'long' }),
-      invoiceNumber: `INV-${Math.floor(1000 + Math.random() * 9000)}`
+      invoiceNumber: generateInvoiceNumber(lastInvoiceNumber + 2) // Skip the one we just used
     });
     resetProductForm();
     setActiveStep(1);
@@ -362,22 +431,15 @@ const StartSale = ({ goldRate, silverRate }) => {
   };
 
   const calculateMakingCharges = (item) => {
+    if (item.category !== 'Gold' && item.category !== 'Silver') return 0;
+    
     if (item.makingChargeType === 'fixed') {
       return parseFloat(item.makingCharge);
     }
     
-    if (item.category === 'Gold' || item.category === 'Silver') {
-      const metalValue = item.weight * item.currentRate;
-      return metalValue * (item.makingCharge / 100);
-    }
-    
-    return 0;
+    const metalValue = item.weight * item.currentRate;
+    return metalValue * (item.makingCharge / 100);
   };
-
-  const months = [
-    'January', 'February', 'March', 'April', 'May', 'June',
-    'July', 'August', 'September', 'October', 'November', 'December'
-  ];
 
   return (
     <div className="start-sale-container">
@@ -497,90 +559,111 @@ const StartSale = ({ goldRate, silverRate }) => {
                   
                   <div className="form-group">
                     <label>Category</label>
-                    <select
+                    <input
+                      type="text"
                       name="category"
                       value={productForm.category}
-                      onChange={handleProductFormChange}
-                    >
-                      <option value="Gold">Gold</option>
-                      <option value="Silver">Silver</option>
-                      <option value="Imitation">Imitation</option>
-                      <option value="Other">Other</option>
-                    </select>
+                      readOnly
+                    />
                   </div>
                 </div>
                 
-                <div className="form-row">
-                  <div className="form-group">
-                    <label>Weight (g)</label>
-                    <input
-                      type="number"
-                      name="weight"
-                      value={productForm.weight}
-                      onChange={handleProductFormChange}
-                      step="0.001"
-                      min="0"
-                      required
-                    />
-                  </div>
-                  
-                  <div className="form-group">
-                    <label>
-                      {productForm.category === 'Gold' || productForm.category === 'Silver' ? 
-                        'Current Rate (₹/g)*' : 'Selling Price*'}
-                    </label>
-                    <input
-                      type="number"
-                      name="currentRate"
-                      value={productForm.currentRate}
-                      onChange={handleProductFormChange}
-                      step="0.01"
-                      min="0"
-                      required
-                    />
-                    <small>
-                      {productForm.category === 'Gold' ? 
-                        `Gold Rate: ₹${goldRate.toFixed(2)}/g` : 
-                        productForm.category === 'Silver' ? 
-                        `Silver Rate: ₹${silverRate.toFixed(2)}/g` : ''}
-                    </small>
-                  </div>
-                </div>
-                
-                <div className="form-row">
-                  <div className="form-group">
-                    <label>Making Charge*</label>
-                    <div className="making-charge-group">
+                {productForm.category === 'Gold' || productForm.category === 'Silver' ? (
+                  <>
+                    <div className="form-row">
+                      <div className="form-group">
+                        <label>Weight (g)</label>
+                        <input
+                          type="number"
+                          name="weight"
+                          value={productForm.weight}
+                          onChange={handleProductFormChange}
+                          step="0.001"
+                          min="0"
+                          required
+                        />
+                      </div>
+                      
+                      <div className="form-group">
+                        <label>Current Rate (₹/g)*</label>
+                        <input
+                          type="number"
+                          name="currentRate"
+                          value={productForm.currentRate}
+                          onChange={handleProductFormChange}
+                          step="0.01"
+                          min="0"
+                          required
+                        />
+                        <small>
+                          {productForm.category === 'Gold' ? 
+                            `Gold Rate: ₹${goldRate.toFixed(2)}/g` : 
+                            `Silver Rate: ₹${silverRate.toFixed(2)}/g`}
+                        </small>
+                      </div>
+                    </div>
+                    
+                    <div className="form-row">
+                      <div className="form-group">
+                        <label>Making Charge*</label>
+                        <div className="making-charge-group">
+                          <input
+                            type="number"
+                            name="makingCharge"
+                            value={productForm.makingCharge}
+                            onChange={handleProductFormChange}
+                            step="0.01"
+                            min="0"
+                            required
+                          />
+                          <select
+                            name="makingChargeType"
+                            value={productForm.makingChargeType}
+                            onChange={handleProductFormChange}
+                          >
+                            <option value="percentage">%</option>
+                            <option value="fixed">₹</option>
+                          </select>
+                        </div>
+                      </div>
+                      
+                      <div className="form-group">
+                        <label>GST (%)</label>
+                        <input
+                          type="number"
+                          name="gst"
+                          value={productForm.gst}
+                          readOnly
+                        />
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label>Selling Price*</label>
                       <input
                         type="number"
-                        name="makingCharge"
-                        value={productForm.makingCharge}
+                        name="sellingPrice"
+                        value={productForm.sellingPrice}
                         onChange={handleProductFormChange}
                         step="0.01"
                         min="0"
                         required
                       />
-                      <select
-                        name="makingChargeType"
-                        value={productForm.makingChargeType}
-                        onChange={handleProductFormChange}
-                      >
-                        <option value="percentage">%</option>
-                        <option value="fixed">₹</option>
-                      </select>
+                    </div>
+                    
+                    <div className="form-group">
+                      <label>GST (%)</label>
+                      <input
+                        type="number"
+                        name="gst"
+                        value={productForm.gst}
+                        readOnly
+                      />
                     </div>
                   </div>
-                  
-                  <div className="form-group">
-                    <label>GST (%)</label>
-                    <input
-                      type="number"
-                      name="gst"
-                      value={productForm.gst}
-                      readOnly
-                    />
-                  </div>
-                </div>
+                )}
                 
                 <div className="form-row">
                   <div className="form-group">
@@ -658,7 +741,7 @@ const StartSale = ({ goldRate, silverRate }) => {
                     <th>#</th>
                     <th>Product</th>
                     <th>Category</th>
-                    <th>Weight</th>
+                    <th>{productForm.category === 'Gold' || productForm.category === 'Silver' ? 'Weight' : 'Price'}</th>
                     <th>Price</th>
                   </tr>
                 </thead>
@@ -668,7 +751,11 @@ const StartSale = ({ goldRate, silverRate }) => {
                       <td>{index + 1}</td>
                       <td>{item.productName}</td>
                       <td>{item.category}</td>
-                      <td>{item.weight.toFixed(3)}g</td>
+                      <td>
+                        {item.category === 'Gold' || item.category === 'Silver' ? 
+                          `${item.weight.toFixed(3)}g` : 
+                          `₹${item.sellingPrice.toFixed(2)}`}
+                      </td>
                       <td>₹{item.totalPrice.toFixed(2)}</td>
                     </tr>
                   ))}
@@ -799,7 +886,7 @@ const StartSale = ({ goldRate, silverRate }) => {
                       <th>#</th>
                       <th>Product</th>
                       <th>Category</th>
-                      <th>Weight</th>
+                      <th>{productForm.category === 'Gold' || productForm.category === 'Silver' ? 'Weight' : 'Price'}</th>
                       <th>Price</th>
                       <th>Action</th>
                     </tr>
@@ -810,7 +897,11 @@ const StartSale = ({ goldRate, silverRate }) => {
                         <td>{index + 1}</td>
                         <td>{item.productName}</td>
                         <td>{item.category}</td>
-                        <td>{item.weight.toFixed(3)}g</td>
+                        <td>
+                          {item.category === 'Gold' || item.category === 'Silver' ? 
+                            `${item.weight.toFixed(3)}g` : 
+                            `₹${item.sellingPrice.toFixed(2)}`}
+                        </td>
                         <td>₹{item.totalPrice.toFixed(2)}</td>
                         <td>
                           <button 
@@ -872,7 +963,7 @@ const StartSale = ({ goldRate, silverRate }) => {
               <h3>Invoice Preview</h3>
               <button 
                 className="close-invoice-btn"
-                onClick={closeInvoicePreview}
+                onClick={() => setShowInvoicePreview(false)}
               >
                 ×
               </button>
@@ -933,13 +1024,15 @@ const StartSale = ({ goldRate, silverRate }) => {
                       {cart.map((item, index) => (
                         <tr key={item.id}>
                           <td>-</td>
-                          <td>{item.weight.toFixed(3)}g</td>
-                          <td>{item.weight.toFixed(3)}g</td>
-                          <td>₹{item.currentRate.toFixed(2)}</td>
+                          <td>{item.category === 'Gold' || item.category === 'Silver' ? `${item.weight.toFixed(3)}g` : '-'}</td>
+                          <td>{item.category === 'Gold' || item.category === 'Silver' ? `${item.weight.toFixed(3)}g` : '-'}</td>
+                          <td>{item.category === 'Gold' || item.category === 'Silver' ? `₹${item.currentRate.toFixed(2)}` : '-'}</td>
                           <td>
-                            {item.makingChargeType === 'percentage' 
-                              ? `${item.makingCharge}%` 
-                              : `₹${item.makingCharge}`}
+                            {item.category === 'Gold' || item.category === 'Silver' ? 
+                              (item.makingChargeType === 'percentage' 
+                                ? `${item.makingCharge}%` 
+                                : `₹${item.makingCharge}`)
+                              : '-'}
                           </td>
                           <td>₹{item.totalPrice.toFixed(2)}</td>
                         </tr>
@@ -1017,10 +1110,10 @@ const StartSale = ({ goldRate, silverRate }) => {
                 🖨 Print Invoice
               </button>
               <button 
-                className="close-invoice-btn"
-                onClick={closeInvoicePreview}
+                className="complete-sale-btn"
+                onClick={completeSale}
               >
-                Close
+                Complete Sale
               </button>
             </div>
           </div>
