@@ -14,15 +14,12 @@ const SalesHistory = () => {
   const [filters, setFilters] = useState({
     startDate: '',
     endDate: '',
-    searchTerm: '',
-    statusFilter: 'All',
-    categoryFilter: 'All'
+    searchTerm: ''
   });
   const [selectedInvoice, setSelectedInvoice] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [toastMessages, setToastMessages] = useState([]);
 
-  // Show toast message
   const showToast = (message, type = 'success') => {
     const newToast = {
       id: Date.now(),
@@ -35,7 +32,6 @@ const SalesHistory = () => {
     }, 3000);
   };
 
-  // Fetch sales data from Firebase
   useEffect(() => {
     const salesRef = ref(database, 'sales');
     
@@ -50,9 +46,6 @@ const SalesHistory = () => {
             customer: data[key].customer?.name || 'Anonymous Customer',
             phone: data[key].customer?.phone || 'N/A',
             totalAmount: data[key].summary?.finalTotal || 0,
-            paymentMode: data[key].summary?.paymentMode || 'Cash',
-            status: data[key].summary?.status || 'Paid',
-            category: data[key].items?.[0]?.metalType || 'Uncategorized',
             items: data[key].items || []
           }));
           
@@ -74,7 +67,6 @@ const SalesHistory = () => {
     return () => off(salesRef);
   }, []);
 
-  // Filter data
   const filteredData = useMemo(() => {
     return salesData.filter(sale => {
       const date = new Date(sale.date);
@@ -86,41 +78,27 @@ const SalesHistory = () => {
         (!endDate || date <= endDate) &&
         (filters.searchTerm === '' || 
          sale.customer.toLowerCase().includes(filters.searchTerm.toLowerCase()) || 
-         sale.id.toLowerCase().includes(filters.searchTerm.toLowerCase())) &&
-        (filters.statusFilter === 'All' || sale.status === filters.statusFilter) &&
-        (filters.categoryFilter === 'All' || sale.category === filters.categoryFilter)
+         sale.id.toLowerCase().includes(filters.searchTerm.toLowerCase()))
       );
     });
   }, [salesData, filters]);
 
-  // CSV Data
   const csvData = useMemo(() => {
     return filteredData.map(sale => ({
       'Invoice No': sale.id,
       'Date': sale.date,
       'Customer Name': sale.customer,
       'Phone': sale.phone,
-      'Category': sale.category,
-      'Total Amount': sale.totalAmount,
-      'Payment Mode': sale.paymentMode,
-      'Status': sale.status
+      'Total Amount': sale.totalAmount
     }));
   }, [filteredData]);
 
-  // Table columns
   const columns = useMemo(
     () => [
       {
         Header: 'Invoice No',
         accessor: 'id',
-        Cell: ({ row }) => (
-          <button 
-            className="invoice-link"
-            onClick={() => handleViewInvoice(row.original)}
-          >
-            {row.original.id}
-          </button>
-        ),
+        Cell: ({ value }) => value.slice(-4), // Show only last 4 digits
         sortType: 'basic'
       },
       {
@@ -135,51 +113,22 @@ const SalesHistory = () => {
         sortType: 'alphanumeric'
       },
       {
-        Header: 'Category',
-        accessor: 'category',
-        sortType: 'basic'
-      },
-      {
         Header: 'Total Amount (₹)',
         accessor: 'totalAmount',
         Cell: ({ value }) => value.toLocaleString('en-IN'),
         sortType: 'basic'
       },
       {
-        Header: 'Payment Mode',
-        accessor: 'paymentMode',
-        sortType: 'basic'
-      },
-      {
-        Header: 'Status',
-        accessor: 'status',
-        Cell: ({ value }) => (
-          <span className={`status-badge ${value.toLowerCase()}`}>
-            {value === 'Paid' ? '✅ Paid' : '⏳ Pending'}
-          </span>
-        ),
-        sortType: 'basic'
-      },
-      {
-        Header: 'Actions',
-        accessor: 'actions',
+        Header: 'Invoice',
+        accessor: 'invoice',
         Cell: ({ row }) => (
-          <div className="action-buttons">
-            <button 
-              className="view-btn"
-              onClick={() => handleViewInvoice(row.original)}
-              title="View Invoice"
-            >
-              🔍
-            </button>
-            <button 
-              className="pdf-btn"
-              onClick={() => exportSinglePDF(row.original)}
-              title="Download PDF"
-            >
-              📄
-            </button>
-          </div>
+          <button 
+            className="invoice-btn"
+            onClick={() => handleViewInvoice(row.original)}
+            title="View Invoice"
+          >
+            📄 Invoice
+          </button>
         ),
         disableSortBy: true
       }
@@ -187,7 +136,6 @@ const SalesHistory = () => {
     []
   );
 
-  // Table instance
   const tableInstance = useTable(
     {
       columns,
@@ -219,14 +167,12 @@ const SalesHistory = () => {
     state: { pageIndex, pageSize, sortBy }
   } = tableInstance;
 
-  // View invoice details
   const handleViewInvoice = useCallback((invoice) => {
     setSelectedInvoice(invoice);
     setIsModalOpen(true);
-    showToast(`Invoice ${invoice.id} details opened`, 'info');
+    showToast(`Invoice ${invoice.id.slice(-4)} details opened`, 'info');
   }, []);
 
-  // Handle filter changes
   const handleFilterChange = useCallback((e) => {
     const { name, value } = e.target;
     setFilters(prev => ({
@@ -235,15 +181,6 @@ const SalesHistory = () => {
     }));
   }, []);
 
-  // Handle category change
-  const handleCategoryChange = useCallback((category) => {
-    setFilters(prev => ({
-      ...prev,
-      categoryFilter: category
-    }));
-  }, []);
-
-  // Export single invoice as PDF
   const exportSinglePDF = useCallback((invoice) => {
     try {
       const doc = new jsPDF();
@@ -257,7 +194,7 @@ const SalesHistory = () => {
       
       // Add invoice header
       doc.setFontSize(16);
-      doc.text(`INVOICE: ${invoice.id}`, 105, 40, { align: 'center' });
+      doc.text(`INVOICE: ${invoice.id.slice(-4)}`, 105, 40, { align: 'center' });
       doc.setFontSize(10);
       doc.text(`Date: ${new Date(invoice.date).toLocaleDateString()}`, 105, 47, { align: 'center' });
       
@@ -265,11 +202,10 @@ const SalesHistory = () => {
       doc.setFontSize(12);
       doc.text(`Customer: ${invoice.customer}`, 20, 60);
       doc.text(`Phone: ${invoice.phone}`, 20, 67);
-      doc.text(`Category: ${invoice.category}`, 20, 74);
       
       // Add items table
       doc.autoTable({
-        startY: 85,
+        startY: 80,
         head: [['Item', 'Weight (g)', 'Rate', 'Making', 'GST %', 'Qty', 'Amount']],
         body: invoice.items.map(item => [
           item.productName || item.name || 'Unnamed Product',
@@ -288,19 +224,16 @@ const SalesHistory = () => {
       const finalY = doc.lastAutoTable.finalY + 10;
       doc.setFontSize(12);
       doc.text(`Total Amount: ₹${invoice.totalAmount?.toLocaleString() || '0'}`, 20, finalY);
-      doc.text(`Payment Mode: ${invoice.paymentMode}`, 20, finalY + 7);
-      doc.text(`Status: ${invoice.status}`, 20, finalY + 14);
       
       // Save the PDF
-      doc.save(`Invoice_${invoice.id}.pdf`);
-      showToast(`PDF for ${invoice.id} downloaded`, 'success');
+      doc.save(`Invoice_${invoice.id.slice(-4)}.pdf`);
+      showToast(`PDF for ${invoice.id.slice(-4)} downloaded`, 'success');
     } catch (error) {
       console.error('Error generating PDF:', error);
       showToast('Failed to generate PDF', 'error');
     }
   }, []);
 
-  // Export all filtered data as PDF
   const exportAllPDF = useCallback(() => {
     try {
       const doc = new jsPDF();
@@ -310,20 +243,16 @@ const SalesHistory = () => {
       doc.text('Sales History Report - Mere Jewellery', 105, 15, { align: 'center' });
       doc.setFontSize(12);
       doc.text(`From: ${filters.startDate || 'Beginning'} To: ${filters.endDate || 'Today'}`, 105, 22, { align: 'center' });
-      doc.text(`Category: ${filters.categoryFilter === 'All' ? 'All Categories' : filters.categoryFilter}`, 105, 29, { align: 'center' });
       
       // Add table
       doc.autoTable({
-        startY: 40,
-        head: [['Invoice No', 'Date', 'Customer', 'Category', 'Amount (₹)', 'Payment', 'Status']],
+        startY: 35,
+        head: [['Invoice No', 'Date', 'Customer', 'Amount (₹)']],
         body: filteredData.map(sale => [
-          sale.id,
+          sale.id.slice(-4),
           new Date(sale.date).toLocaleDateString(),
           sale.customer,
-          sale.category,
-          sale.totalAmount.toLocaleString(),
-          sale.paymentMode,
-          sale.status
+          sale.totalAmount.toLocaleString()
         ]),
         styles: { fontSize: 10 },
         headStyles: { fillColor: [212, 175, 55] }
@@ -338,7 +267,6 @@ const SalesHistory = () => {
     }
   }, [filteredData, filters]);
 
-  // Print invoice
   const printInvoice = useCallback(() => {
     try {
       const input = document.getElementById('invoice-to-print');
@@ -354,12 +282,6 @@ const SalesHistory = () => {
       showToast('Failed to print invoice', 'error');
     }
   }, []);
-
-  // Get unique categories
-  const categories = useMemo(() => {
-    const allCategories = ['All', ...new Set(salesData.map(sale => sale.category))];
-    return allCategories.filter(cat => cat && cat !== 'All');
-  }, [salesData]);
 
   if (loading) {
     return <div className="loading-container">Loading sales data...</div>;
@@ -378,8 +300,6 @@ const SalesHistory = () => {
 
       {/* Header Section */}
       <div className="sales-history-header">
-        <h1>Sales History</h1>
-        
         <div className="action-buttons">
           <button 
             className="export-btn"
@@ -434,37 +354,6 @@ const SalesHistory = () => {
             onChange={handleFilterChange}
           />
         </div>
-        
-        <div className="status-filter">
-          <select
-            name="statusFilter"
-            value={filters.statusFilter}
-            onChange={handleFilterChange}
-          >
-            <option value="All">All Status</option>
-            <option value="Paid">Paid</option>
-            <option value="Pending">Pending</option>
-          </select>
-        </div>
-      </div>
-
-      {/* Category Tabs */}
-      <div className="category-tabs">
-        <button 
-          className={`tab-btn ${filters.categoryFilter === 'All' ? 'active' : ''}`}
-          onClick={() => handleCategoryChange('All')}
-        >
-          All
-        </button>
-        {categories.map(category => (
-          <button 
-            key={category}
-            className={`tab-btn ${filters.categoryFilter === category ? 'active' : ''}`}
-            onClick={() => handleCategoryChange(category)}
-          >
-            {category}
-          </button>
-        ))}
       </div>
       
       {/* Sales Table */}
@@ -522,18 +411,18 @@ const SalesHistory = () => {
               <button onClick={() => previousPage()} disabled={!canPreviousPage}>
                 {'<'}
               </button>{' '}
+              <span className="page-info">
+                Page{' '}
+                <strong>
+                  {pageIndex + 1} of {pageOptions.length}
+                </strong>
+              </span>
               <button onClick={() => nextPage()} disabled={!canNextPage}>
                 {'>'}
               </button>{' '}
               <button onClick={() => gotoPage(pageCount - 1)} disabled={!canNextPage}>
                 {'>>'}
               </button>{' '}
-              <span>
-                Page{' '}
-                <strong>
-                  {pageIndex + 1} of {pageOptions.length}
-                </strong>{' '}
-              </span>
               <select
                 value={pageSize}
                 onChange={e => setPageSize(Number(e.target.value))}
@@ -554,7 +443,7 @@ const SalesHistory = () => {
         <div className="modal-overlay">
           <div className="invoice-modal">
             <div className="modal-header">
-              <h2>Invoice Details</h2>
+              <h2>Invoice Details - {selectedInvoice.id.slice(-4)}</h2>
               <button 
                 className="close-btn"
                 onClick={() => setIsModalOpen(false)}
@@ -573,7 +462,7 @@ const SalesHistory = () => {
                   </div>
                   
                   <div className="invoice-meta">
-                    <h3>INVOICE: {selectedInvoice.id}</h3>
+                    <h3>INVOICE: {selectedInvoice.id.slice(-4)}</h3>
                     <p>Date: {new Date(selectedInvoice.date).toLocaleDateString()}</p>
                   </div>
                 </div>
@@ -582,7 +471,6 @@ const SalesHistory = () => {
                   <h4>Customer Details</h4>
                   <p>Name: {selectedInvoice.customer}</p>
                   <p>Phone: {selectedInvoice.phone}</p>
-                  <p>Category: {selectedInvoice.category}</p>
                 </div>
                 
                 <table className="invoice-items">
@@ -613,33 +501,9 @@ const SalesHistory = () => {
                 </table>
                 
                 <div className="invoice-totals">
-                  <div className="total-row">
-                    <span>Subtotal:</span>
-                    <span>₹{selectedInvoice.summary?.subtotal?.toLocaleString() || selectedInvoice.totalAmount?.toLocaleString() || '0'}</span>
-                  </div>
-                  {selectedInvoice.summary?.discount > 0 && (
-                    <div className="total-row">
-                      <span>Discount:</span>
-                      <span>-₹{selectedInvoice.summary.discount.toLocaleString()}</span>
-                    </div>
-                  )}
-                  <div className="total-row">
-                    <span>GST:</span>
-                    <span>₹{selectedInvoice.summary?.gstAmount?.toLocaleString() || '0'}</span>
-                  </div>
                   <div className="total-row grand-total">
                     <span>Total Amount:</span>
                     <span>₹{selectedInvoice.totalAmount?.toLocaleString() || '0'}</span>
-                  </div>
-                  <div className="total-row">
-                    <span>Payment Mode:</span>
-                    <span>{selectedInvoice.paymentMode}</span>
-                  </div>
-                  <div className="total-row">
-                    <span>Status:</span>
-                    <span className={`status-badge ${selectedInvoice.status.toLowerCase()}`}>
-                      {selectedInvoice.status}
-                    </span>
                   </div>
                 </div>
               </div>

@@ -44,7 +44,8 @@ const RegisteredProducts = () => {
         if (data) {
           const productsArray = Object.keys(data).map(key => ({
             id: key,
-            ...data[key]
+            ...data[key],
+            quantity: data[key].quantity || 0 // Ensure quantity exists
           }));
           setProducts(productsArray);
           toast.dismiss('loading-toast');
@@ -97,7 +98,7 @@ const RegisteredProducts = () => {
     };
   }, []);
 
-  const categories = ['All', 'Gold', 'Silver', 'Emitation'];
+  const categories = ['All', 'Gold', 'Silver', 'Imitation'];
 
   useEffect(() => {
     let result = [...products];
@@ -114,9 +115,9 @@ const RegisteredProducts = () => {
     }
 
     if (stockFilter === 'Low') {
-      result = result.filter(p => p.stock < 5);
+      result = result.filter(p => p.quantity < 5);
     } else if (stockFilter === 'Out') {
-      result = result.filter(p => p.stock === 0);
+      result = result.filter(p => p.quantity === 0);
     }
 
     switch(sortOption) {
@@ -235,7 +236,7 @@ const RegisteredProducts = () => {
       'Barcode': product.barcode,
       'Category': product.category,
       'Weight (grams)': product.weight || 'N/A',
-      'Stock': product.stock
+      'Stock': product.quantity
     }));
 
     if (type === 'csv') {
@@ -310,7 +311,7 @@ const RegisteredProducts = () => {
       await update(productRef, {
         name: product.name,
         category: product.category,
-        stock: product.stock,
+        quantity: product.quantity,
         barcode: product.barcode,
         weight: product.weight || null
       });
@@ -433,7 +434,7 @@ const RegisteredProducts = () => {
               currentItems.map(product => (
                 <tr 
                   key={product.id} 
-                  className={product.stock < 5 ? 'low-stock' : ''}
+                  className={product.quantity < 5 ? 'low-stock' : ''}
                 >
                   <td>
                     <input
@@ -462,8 +463,8 @@ const RegisteredProducts = () => {
                     )}
                   </td>
                   <td>
-                    <span className={`stock-badge ${product.stock === 0 ? 'out-stock' : ''}`}>
-                      {product.stock} pcs
+                    <span className={`stock-badge ${product.quantity === 0 ? 'out-stock' : ''}`}>
+                      {product.quantity} pcs
                     </span>
                   </td>
                   <td>
@@ -595,8 +596,8 @@ const RegisteredProducts = () => {
                   <label>Stock</label>
                   <input
                     type="number"
-                    value={editingProduct.stock}
-                    onChange={(e) => setEditingProduct({...editingProduct, stock: parseInt(e.target.value) || 0})}
+                    value={editingProduct.quantity}
+                    onChange={(e) => setEditingProduct({...editingProduct, quantity: parseInt(e.target.value) || 0})}
                     min="0"
                   />
                 </div>

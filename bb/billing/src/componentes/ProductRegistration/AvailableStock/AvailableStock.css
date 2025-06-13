@@ -1,0 +1,489 @@
+/* AvailableStock.css - Jewelry Store Dashboard */
+
+:root {
+  --primary: #6c5ce7;
+  --primary-dark: #5649c0;
+  --secondary: #00cec9;
+  --success: #00b894;
+  --warning: #fdcb6e;
+  --danger: #d63031;
+  --gold: #ffd700;
+  --silver: #c0c0c0;
+  --imitation: #8B4513;
+  --light: #f5f6fa;
+  --dark: #2d3436;
+  --text: #2d3436;
+  --text-light: #636e72;
+  --border: #dfe6e9;
+  --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  --shadow-hover: 0 8px 15px rgba(0, 0, 0, 0.15);
+  --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  --status-high: #00b894;
+  --status-medium: #fdcb6e;
+  --status-low: #e17055;
+  --status-out: #d63031;
+}
+
+/* Main container styles */
+.jewelry-store-panel {
+  font-family: 'Poppins', 'Arial', sans-serif;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 30px;
+  color: var(--text);
+  background: linear-gradient(135deg, #f9f9ff 0%, #f0f2ff 100%);
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+}
+
+/* Summary Cards */
+.summary-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 25px;
+  margin-bottom: 40px;
+}
+
+.summary-card {
+  background: white;
+  border-radius: 15px;
+  padding: 25px;
+  display: flex;
+  align-items: center;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2), 0 6px 6px rgba(0, 0, 0, 0.1);
+  transition: var(--transition);
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
+}
+.summary-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, rgba(108, 92, 231, 0.1) 0%, rgba(0, 206, 201, 0.1) 100%);
+  z-index: -1;
+  box-shadow: var(--shadow-x1);
+}
+
+.summary-card:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--shadow-hover);
+}
+
+.card-icon {
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 20px;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.card-icon .icon {
+  font-size: 30px;
+  color: var(--primary);
+}
+
+.card-content h3 {
+  margin: 0;
+  font-size: 1rem;
+  color: var(--text-light);
+  font-weight: 600;
+}
+
+.card-content p {
+  margin: 5px 0 0;
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--dark);
+}
+
+/* Specific card styles */
+.total-items .card-icon {
+  background: linear-gradient(135deg, rgba(108, 92, 231, 0.2) 0%, rgba(0, 206, 201, 0.2) 100%);
+}
+
+.total-items .icon {
+  color: var(--primary);
+}
+
+.gold-items .card-icon {
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.2) 0%, rgba(218, 165, 32, 0.2) 100%);
+}
+
+.gold-items .icon {
+  color: var(--gold);
+}
+
+.silver-items .card-icon {
+  background: linear-gradient(135deg, rgba(192, 192, 192, 0.2) 0%, rgba(168, 168, 168, 0.2) 100%);
+}
+
+.silver-items .icon {
+  color: var(--silver);
+}
+
+.low-stock .card-icon {
+  background: linear-gradient(135deg, rgba(230, 112, 85, 0.2) 0%, rgba(214, 48, 49, 0.2) 100%);
+}
+
+.low-stock .icon {
+  color: var(--danger);
+}
+
+/* Controls container */
+.controls-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+  flex-wrap: wrap;
+  gap: 25px;
+  padding: 15px;
+  background: white;
+  border-radius: 15px;
+  box-shadow: var(--shadow);
+}
+
+/* Tabs styling */
+.tabs {
+  display: flex;
+  gap: 15px;
+  flex-wrap: wrap;
+}
+
+.tab {
+  padding: 12px 25px;
+  border: none;
+  border-radius: 30px;
+  background-color: var(--light);
+  cursor: pointer;
+  font-weight: 600;
+  transition: var(--transition);
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+  color: var(--text);
+  z-index: 1;
+}
+
+.tab::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+  z-index: -1;
+  opacity: 0;
+  transition: var(--transition);
+  border-radius: 30px;
+}
+
+.tab:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-hover);
+  color: white;
+}
+
+.tab:hover::before {
+  opacity: 1;
+}
+
+/* Unique colors for each tab */
+.tab.gold {
+  background-color: var(--gold);
+  color: #333;
+}
+
+.tab.gold:hover {
+  color: white;
+}
+
+.tab.gold::before {
+  background: linear-gradient(135deg, #ffd700 0%, #daa520 100%);
+}
+
+.tab.silver {
+  background-color: var(--silver);
+  color: #333;
+}
+
+.tab.silver:hover {
+  color: white;
+}
+
+.tab.silver::before {
+  background: linear-gradient(135deg, #c0c0c0 0%, #a8a8a8 100%);
+}
+
+.tab.emitation {
+  background-color: var(--imitation);
+  color: white;
+}
+
+.tab.imitation:hover {
+  color: white;
+}
+
+.tab.imitation::before {
+  background: linear-gradient(135deg, #8B4513 0%, #5D2906 100%);
+}
+
+.tab.active {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+  color: white;
+}
+
+.tab.active::before {
+  opacity: 1;
+}
+
+/* Sort container */
+.sort-container {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  background: white;
+  padding: 10px 15px;
+  border-radius: 10px;
+  box-shadow: var(--shadow);
+}
+
+.sort-container label {
+  font-weight: 600;
+  color: var(--text-light);
+}
+
+.sort-container select {
+  padding: 10px 15px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background-color: var(--light);
+  cursor: pointer;
+  font-weight: 500;
+  transition: var(--transition);
+}
+
+.sort-container select:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.2);
+}
+
+/* Loading indicator */
+.loading-indicator {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px;
+}
+
+.loading-indicator .spinner {
+  border: 5px solid rgba(0, 0, 0, 0.1);
+  border-radius: 50%;
+  border-top: 5px solid var(--primary);
+  width: 60px;
+  height: 60px;
+  animation: spin 1s linear infinite;
+  box-shadow: 0 4px 10px rgba(108, 92, 231, 0.3);
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.loading-indicator p {
+  margin-top: 20px;
+  font-weight: 600;
+  color: var(--text-light);
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% { opacity: 0.6; }
+  50% { opacity: 1; }
+  100% { opacity: 0.6; }
+}
+
+/* Product table */
+.product-table-container {
+  background: white;
+  border-radius: 15px;
+  padding: 20px;
+  box-shadow: var(--shadow);
+  overflow-x: auto;
+}
+
+.product-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+}
+
+.product-table th {
+  text-align: left;
+  padding: 15px;
+  background-color: #f8f9fa;
+  font-weight: 600;
+  color: black;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+  letter-spacing: 0.5px;
+  border-bottom: 2px solid var(--border);
+}
+
+.product-table td {
+  padding: 15px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+
+.product-row:hover {
+  background-color: #fff9e6;
+}
+
+/* Category badges */
+.category-badge {
+  display: inline-block;
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-align: center;
+  min-width: 70px;
+}
+
+.category-badge.gold {
+  background-color: rgba(255, 215, 0, 0.1);
+  color: #daa520;
+  border: 1px solid rgba(255, 215, 0, 0.3);
+}
+
+.category-badge.silver {
+  background-color: rgba(192, 192, 192, 0.1);
+  color: #a8a8a8;
+  border: 1px solid rgba(192, 192, 192, 0.3);
+}
+
+.category-badge.imitation {
+  background-color: rgba(139, 69, 19, 0.1);
+  color: #8B4513;
+  border: 1px solid rgba(139, 69, 19, 0.3);
+}
+
+/* Status badges */
+.status-badge {
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  min-width: 100px;
+  text-align: center;
+}
+
+.status-high {
+  background-color: rgba(0, 184, 148, 0.1);
+  color: var(--status-high);
+  border: 1px solid rgba(0, 184, 148, 0.3);
+}
+
+.status-medium {
+  background-color: rgba(253, 203, 110, 0.1);
+  color: var(--status-medium);
+  border: 1px solid rgba(253, 203, 110, 0.3);
+}
+
+.status-low {
+  background-color: rgba(225, 112, 85, 0.1);
+  color: var(--status-low);
+  border: 1px solid rgba(225, 112, 85, 0.3);
+}
+
+.status-out {
+  background-color: rgba(214, 48, 49, 0.1);
+  color: var(--status-out);
+  border: 1px solid rgba(214, 48, 49, 0.3);
+}
+
+/* No products message */
+.no-products {
+  text-align: center;
+  padding: 60px;
+  color: var(--text-light);
+  background: white;
+  border-radius: 15px;
+  box-shadow: var(--shadow);
+}
+
+.no-products i {
+  font-size: 3rem;
+  color: var(--border);
+  margin-bottom: 20px;
+  display: block;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1200px) {
+  .summary-cards {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .jewelry-store-panel {
+    padding: 20px;
+  }
+  
+  .controls-container {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 15px;
+  }
+  
+  .tabs {
+    width: 100%;
+    overflow-x: auto;
+    padding-bottom: 10px;
+    scrollbar-width: thin;
+  }
+  
+  .tab {
+    flex: 0 0 auto;
+  }
+  
+  .summary-cards {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .product-table th, 
+  .product-table td {
+    padding: 10px 8px;
+    font-size: 0.85rem;
+  }
+  
+  .tab {
+    padding: 10px 15px;
+    font-size: 0.9rem;
+  }
+  
+  .category-badge,
+  .status-badge {
+    min-width: auto;
+    padding: 4px 8px;
+    font-size: 0.75rem;
+  }
+}

@@ -1,26 +1,31 @@
 import React, { useState, useEffect, useRef } from 'react';
 import '../SaleProcess/SaleProcess.css';
 import { database } from '../../firebase';
-import { ref, onValue, off, push, set } from 'firebase/database';
+import { ref, onValue, off, push, set, update, runTransaction } from 'firebase/database';
 
 const StartSale = ({ goldRate, silverRate }) => {
-  // Customer state
-  const [customer, setCustomer] = useState({
+  // Load saved cart from localStorage or initialize empty
+  const savedCart = JSON.parse(localStorage.getItem('currentSaleCart')) || [];
+  const savedCustomer = JSON.parse(localStorage.getItem('currentSaleCustomer')) || {
     name: '',
     phone: '',
     address: '',
     email: '',
     isNew: false
-  });
+  };
+  const savedStep = parseInt(localStorage.getItem('currentSaleStep')) || 1;
 
-  // Product cart state
-  const [cart, setCart] = useState([]);
+  // State management
+  const [customer, setCustomer] = useState(savedCustomer);
+  const [cart, setCart] = useState(savedCart);
   const [showCartPopup, setShowCartPopup] = useState(false);
-  const [activeStep, setActiveStep] = useState(1);
+  const [activeStep, setActiveStep] = useState(savedStep);
   const [showInvoicePreview, setShowInvoicePreview] = useState(false);
-
-  // Invoice number state
   const [lastInvoiceNumber, setLastInvoiceNumber] = useState(0);
+  const [saveError, setSaveError] = useState(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [products, setProducts] = useState([]);
+  const [loadingProducts, setLoadingProducts] = useState(true);
 
   // Summary state
   const [summary, setSummary] = useState({
@@ -50,18 +55,21 @@ const StartSale = ({ goldRate, silverRate }) => {
     currentRate: goldRate,
     makingCharge: '',
     makingChargeType: 'percentage',
-    sellingPrice: '', // New field for imitation products
+    sellingPrice: '',
     gst: 3,
     totalPrice: 0
   });
 
-  // Products from Firebase
-  const [products, setProducts] = useState([]);
-  const [loadingProducts, setLoadingProducts] = useState(true);
-
   const barcodeInputRef = useRef(null);
 
-  // Fetch products and last invoice number from Firebase on component mount
+  // Save cart, customer, and step to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem('currentSaleCart', JSON.stringify(cart));
+    localStorage.setItem('currentSaleCustomer', JSON.stringify(customer));
+    localStorage.setItem('currentSaleStep', activeStep.toString());
+  }, [cart, customer, activeStep]);
+
+  // Fetch products and last invoice number from Firebase
   useEffect(() => {
     const productsRef = ref(database, 'products');
     const invoiceCounterRef = ref(database, 'invoiceCounter');
@@ -95,16 +103,18 @@ const StartSale = ({ goldRate, silverRate }) => {
           invoiceNumber: generateInvoiceNumber(counter.lastNumber + 1)
         }));
       } else {
+        // Initialize counter if it doesn't exist
+        set(invoiceCounterRef, { lastNumber: 1000 }); // Starting from 1000 for 4-digit numbers
         setSummary(prev => ({
           ...prev,
-          invoiceNumber: generateInvoiceNumber(1)
+          invoiceNumber: generateInvoiceNumber(1001) // First invoice will be 1001
         }));
       }
     }, (error) => {
       console.error('Error fetching invoice counter:', error);
       setSummary(prev => ({
         ...prev,
-        invoiceNumber: generateInvoiceNumber(1)
+        invoiceNumber: generateInvoiceNumber(1001) // Fallback to 1001 if error
       }));
     });
 
@@ -116,52 +126,9 @@ const StartSale = ({ goldRate, silverRate }) => {
     };
   }, []);
 
-  // Generate sequential invoice number
+  // Helper functions
   const generateInvoiceNumber = (number) => {
-    const now = new Date();
-    const year = now.getFullYear().toString().slice(-2);
-    const month = (now.getMonth() + 1).toString().padStart(2, '0');
-    const day = now.getDate().toString().padStart(2, '0');
-    return `INV-${year}${month}${day}-${number.toString().padStart(4, '0')}`;
-  };
-
-  // Calculate totals whenever cart changes
-  useEffect(() => {
-    calculateTotals();
-  }, [cart, summary.discount, summary.discountType, summary.amountPaid]);
-
-  // Focus barcode input on component mount and when returning to step 1
-  useEffect(() => {
-    if (barcodeInputRef.current && activeStep === 1) {
-      barcodeInputRef.current.focus();
-    }
-  }, [activeStep]);
-
-  const handleCustomerChange = (e) => {
-    const { name, value } = e.target;
-    setCustomer(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleProductFormChange = (e) => {
-    const { name, value } = e.target;
-    
-    setProductForm(prev => {
-      const updatedForm = { 
-        ...prev, 
-        [name]: value,
-        currentRate: name === 'category' ? 
-          (value === 'Gold' ? goldRate : 
-           value === 'Silver' ? silverRate : 
-           0) : 
-          prev.currentRate
-      };
-      
-      if (['category', 'weight', 'currentRate', 'makingCharge', 'makingChargeType', 'sellingPrice'].includes(name)) {
-        updatedForm.totalPrice = calculateProductPrice(updatedForm);
-      }
-      
-      return updatedForm;
-    });
+    return number.toString().padStart(4, '0'); // Changed to 4-digit format
   };
 
   const calculateProductPrice = (product) => {
@@ -212,6 +179,59 @@ const StartSale = ({ goldRate, silverRate }) => {
     }));
   };
 
+  const calculateMakingCharges = (item) => {
+    if (item.category !== 'Gold' && item.category !== 'Silver') return 0;
+    
+    if (item.makingChargeType === 'fixed') {
+      return parseFloat(item.makingCharge);
+    }
+    
+    const metalValue = item.weight * item.currentRate;
+    return metalValue * (item.makingCharge / 100);
+  };
+
+  // Event handlers
+  const handleCustomerChange = (e) => {
+    const { name, value } = e.target;
+    setCustomer(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleProductFormChange = (e) => {
+    const { name, value } = e.target;
+    
+    setProductForm(prev => {
+      const updatedForm = { 
+        ...prev, 
+        [name]: value,
+        currentRate: name === 'category' ? 
+          (value === 'Gold' ? goldRate : 
+           value === 'Silver' ? silverRate : 
+           0) : 
+          prev.currentRate
+      };
+      
+      if (['category', 'weight', 'currentRate', 'makingCharge', 'makingChargeType', 'sellingPrice'].includes(name)) {
+        updatedForm.totalPrice = calculateProductPrice(updatedForm);
+      }
+      
+      return updatedForm;
+    });
+  };
+
+  const handleSummaryChange = (e) => {
+    const { name, value } = e.target;
+    setSummary(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleDateChange = (e) => {
+    const { value } = e.target;
+    setSummary(prev => ({
+      ...prev,
+      invoiceDate: value,
+      invoiceMonth: new Date(value).toLocaleString('default', { month: 'long' })
+    }));
+  };
+
   const handleBarcodeScan = () => {
     if (productForm.barcode) {
       const scannedProduct = products.find(p => p.barcode === productForm.barcode);
@@ -246,6 +266,7 @@ const StartSale = ({ goldRate, silverRate }) => {
     }
   };
 
+  // Cart operations
   const addProductToSale = () => {
     if (!productForm.barcode || !productForm.productId) {
       alert('Please scan a valid product barcode!');
@@ -291,6 +312,10 @@ const StartSale = ({ goldRate, silverRate }) => {
     resetProductForm();
   };
 
+  const removeProductFromCart = (id) => {
+    setCart(prev => prev.filter(item => item.id !== id));
+  };
+
   const resetProductForm = () => {
     setProductForm({
       barcode: '',
@@ -311,24 +336,7 @@ const StartSale = ({ goldRate, silverRate }) => {
     }
   };
 
-  const removeProductFromCart = (id) => {
-    setCart(prev => prev.filter(item => item.id !== id));
-  };
-
-  const handleSummaryChange = (e) => {
-    const { name, value } = e.target;
-    setSummary(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleDateChange = (e) => {
-    const { value } = e.target;
-    setSummary(prev => ({
-      ...prev,
-      invoiceDate: value,
-      invoiceMonth: new Date(value).toLocaleString('default', { month: 'long' })
-    }));
-  };
-
+  // Sale process functions
   const proceedToBilling = () => {
     if (cart.length === 0) {
       alert('Please add at least one product to proceed!');
@@ -343,59 +351,136 @@ const StartSale = ({ goldRate, silverRate }) => {
     setActiveStep(2);
   };
 
-  const saveInvoiceToHistory = async (invoiceData) => {
-    try {
-      // Update invoice counter first
-      const newInvoiceNumber = lastInvoiceNumber + 1;
-      await set(ref(database, 'invoiceCounter'), { lastNumber: newInvoiceNumber });
+  const updateInventoryQuantities = async () => {
+    const updates = {};
+    
+    cart.forEach(item => {
+      if (!item.productId) return;
       
-      // Save the invoice to sales history
+      const productRef = `products/${item.productId}`;
+      updates[`${productRef}/quantity`] = (prev) => {
+        const currentQty = prev || 0;
+        if (currentQty < 1) {
+          throw new Error(`Insufficient stock for ${item.productName}`);
+        }
+        return currentQty - 1;
+      };
+      
+      // Mark product as sold if quantity reaches 0
+      updates[`${productRef}/status`] = (prev) => {
+        const currentQty = prev?.quantity || 0;
+        return currentQty - 1 <= 0 ? 'Sold Out' : prev?.status || 'Available';
+      };
+    });
+
+    await update(ref(database), updates);
+  };
+
+  const saveInvoiceToHistory = async (invoiceData) => {
+    setIsSaving(true);
+    setSaveError(null);
+    
+    try {
+      // Validate invoice data more thoroughly
+      if (!invoiceData.customer?.name) {
+        throw new Error('Customer name is required');
+      }
+      if (!invoiceData.items || invoiceData.items.length === 0) {
+        throw new Error('At least one product is required');
+      }
+
+      const invoiceCounterRef = ref(database, 'invoiceCounter');
+      const newInvoiceNumber = lastInvoiceNumber + 1;
+
+      // Step 1: Update invoice counter
+      await runTransaction(invoiceCounterRef, (counter) => {
+        if (!counter) {
+          counter = { lastNumber: 1000 }; // Initialize with 1000 if not exists
+        }
+        counter.lastNumber = newInvoiceNumber;
+        return counter;
+      });
+
+      // Step 2: Save invoice
       const invoicesRef = ref(database, 'sales');
       const newInvoiceRef = push(invoicesRef);
-      await set(newInvoiceRef, invoiceData);
       
-      console.log('Invoice saved to sales history');
+      const invoiceWithId = {
+        ...invoiceData,
+        id: newInvoiceRef.key,
+        invoiceNumber: generateInvoiceNumber(newInvoiceNumber),
+        timestamp: Date.now()
+      };
+
+      await set(newInvoiceRef, invoiceWithId);
+
+      // Step 3: Update inventory quantities
+      await updateInventoryQuantities();
+
+      // Success - update local state
+      setLastInvoiceNumber(newInvoiceNumber);
+      setShowInvoicePreview(true);
+      clearLocalStorage();
+      
       return true;
     } catch (error) {
-      console.error('Error saving invoice:', error);
+      console.error('Invoice save error:', error);
+      setSaveError(error.message || 'Failed to save invoice. Please check console for details.');
       return false;
+    } finally {
+      setIsSaving(false);
     }
   };
 
+  const clearLocalStorage = () => {
+    localStorage.removeItem('currentSaleCart');
+    localStorage.removeItem('currentSaleCustomer');
+    localStorage.removeItem('currentSaleStep');
+  };
+
   const generateInvoice = async () => {
+    if (summary.balanceDue > 0 && 
+        !window.confirm('Balance due exists. Proceed anyway?')) {
+      return;
+    }
+
     const invoiceData = {
       customer: {
         ...customer,
-        id: Date.now().toString()
+        id: `cust_${Date.now()}`
       },
       items: cart.map(item => ({
-        ...item,
-        metalValue: item.category === 'Gold' || item.category === 'Silver' ? 
-          item.weight * item.currentRate : 0,
-        makingCharges: calculateMakingCharges(item),
-        gstAmount: item.totalPrice - (item.totalPrice / (1 + (item.gst / 100)))
+        productId: item.productId,
+        name: item.productName,
+        category: item.category,
+        weight: item.weight,
+        rate: item.currentRate,
+        makingCharge: item.makingCharge,
+        makingChargeType: item.makingChargeType,
+        gstRate: item.gst,
+        price: item.totalPrice
       })),
-      summary: {
-        ...summary,
-        invoiceNumber: summary.invoiceNumber,
+      payment: {
+        subtotal: summary.subtotal,
+        gst: summary.gstAmount,
+        discount: summary.discountType === 'percentage' ? 
+          `${summary.discount}%` : `₹${summary.discount}`,
+        total: summary.total,
+        amountPaid: summary.amountPaid,
+        balanceDue: summary.balanceDue,
+        mode: summary.paymentMode
+      },
+      metadata: {
         date: summary.invoiceDate,
         month: summary.invoiceMonth,
-        discountAmount: summary.discountType === 'percentage' 
-          ? summary.subtotal * (summary.discount / 100)
-          : parseFloat(summary.discount),
-        timestamp: Date.now(),
         status: summary.balanceDue > 0 ? 'Pending' : 'Paid'
-      },
-      status: 'completed',
-      createdAt: new Date().toISOString()
+      }
     };
 
     const success = await saveInvoiceToHistory(invoiceData);
     
-    if (success) {
-      setShowInvoicePreview(true);
-    } else {
-      alert('Failed to save invoice. Please try again.');
+    if (!success) {
+      alert(`Invoice failed: ${saveError}`);
     }
   };
 
@@ -428,18 +513,39 @@ const StartSale = ({ goldRate, silverRate }) => {
     resetProductForm();
     setActiveStep(1);
     setShowInvoicePreview(false);
+    setSaveError(null);
   };
 
-  const calculateMakingCharges = (item) => {
-    if (item.category !== 'Gold' && item.category !== 'Silver') return 0;
-    
-    if (item.makingChargeType === 'fixed') {
-      return parseFloat(item.makingCharge);
+  const clearCurrentSale = () => {
+    if (window.confirm('Are you sure you want to clear the current sale? All unsaved data will be lost.')) {
+      setCustomer({
+        name: '',
+        phone: '',
+        address: '',
+        email: '',
+        isNew: false
+      });
+      setCart([]);
+      setActiveStep(1);
+      // Also clear from localStorage
+      localStorage.removeItem('currentSaleCart');
+      localStorage.removeItem('currentSaleCustomer');
+      localStorage.removeItem('currentSaleStep');
+      setSaveError(null);
     }
-    
-    const metalValue = item.weight * item.currentRate;
-    return metalValue * (item.makingCharge / 100);
   };
+
+  // Calculate totals whenever cart changes
+  useEffect(() => {
+    calculateTotals();
+  }, [cart, summary.discount, summary.discountType, summary.amountPaid]);
+
+  // Focus barcode input on component mount and when returning to step 1
+  useEffect(() => {
+    if (barcodeInputRef.current && activeStep === 1) {
+      barcodeInputRef.current.focus();
+    }
+  }, [activeStep]);
 
   return (
     <div className="start-sale-container">
@@ -455,6 +561,23 @@ const StartSale = ({ goldRate, silverRate }) => {
           <div className="step-title">Billing & Invoice</div>
         </div>
       </div>
+
+      {/* Clear Sale Button */}
+      {(cart.length > 0 || customer.name) && (
+        <button 
+          className="clear-sale-btn"
+          onClick={clearCurrentSale}
+        >
+          🗑 Clear Current Sale
+        </button>
+      )}
+
+      {/* Error Message */}
+      {saveError && (
+        <div className="error-message">
+          {saveError}
+        </div>
+      )}
 
       {/* Customer Section */}
       <div className="customer-section">
@@ -769,7 +892,7 @@ const StartSale = ({ goldRate, silverRate }) => {
               <div className="summary-details">
                 <div className="summary-row">
                   <span>Invoice Number:</span>
-                  <span>{summary.invoiceNumber}</span>
+                  <span>{generateInvoiceNumber(lastInvoiceNumber + 1)}</span>
                 </div>
                 <div className="summary-row">
                   <span>Invoice Date:</span>
@@ -853,8 +976,15 @@ const StartSale = ({ goldRate, silverRate }) => {
                 <button 
                   className="print-invoice-btn"
                   onClick={generateInvoice}
+                  disabled={isSaving}
                 >
-                  🖨 Generate Invoice
+                  {isSaving ? (
+                    <>
+                      <span className="loading-spinner"></span> Saving...
+                    </>
+                  ) : (
+                    '🖨 Generate Invoice'
+                  )}
                 </button>
               </div>
             </div>
@@ -983,7 +1113,7 @@ const StartSale = ({ goldRate, silverRate }) => {
                   <tbody>
                     <tr>
                       <td>Invoice No.</td>
-                      <td>{summary.invoiceNumber}</td>
+                      <td>{generateInvoiceNumber(lastInvoiceNumber + 1)}</td>
                       <td>1st week's week, version, fix, months, $2</td>
                       <td>202380</td>
                       <td>244309</td>
@@ -1048,19 +1178,19 @@ const StartSale = ({ goldRate, silverRate }) => {
                   <div className="gain-cost-grid">
                     <div className="gain-cost-row">
                       <span>Gross Amount</span>
-                      <span>9g-3/5g</span>
+                      <span>₹{summary.subtotal.toFixed(2)}</span>
                     </div>
                     <div className="gain-cost-row">
                       <span>Add SGST 1.5%</span>
-                      <span>-9g-3/5g</span>
+                      <span>₹{(summary.gstAmount / 2).toFixed(2)}</span>
                     </div>
                     <div className="gain-cost-row">
-                      <span>Add SGST 1.5%</span>
-                      <span>-9g-3/5g</span>
+                      <span>Add CGST 1.5%</span>
+                      <span>₹{(summary.gstAmount / 2).toFixed(2)}</span>
                     </div>
                     <div className="gain-cost-row">
-                      <span>Add SGST 1.5%</span>
-                      <span>-9g-3/5g</span>
+                      <span>Total Amount</span>
+                      <span>₹{summary.total.toFixed(2)}</span>
                     </div>
                   </div>
                 </div>
@@ -1068,27 +1198,15 @@ const StartSale = ({ goldRate, silverRate }) => {
                 <hr className="invoice-divider" />
                 
                 <div className="invoice-bank-details">
-                  <h3>Duration of //Gd</h3>
+                  <h3>Payment Details</h3>
                   <div className="bank-details-grid">
                     <div className="bank-detail-row">
-                      <span>Bank Name : Bank of Barock</span>
-                      <span>Branch : Ermiei</span>
+                      <span>Payment Mode: {summary.paymentMode}</span>
+                      <span>Amount Paid: ₹{summary.amountPaid.toFixed(2)}</span>
                     </div>
                     <div className="bank-detail-row">
-                      <span>By Cash Credit</span>
-                      <span>Jok No.: 7091020000022</span>
-                    </div>
-                    <div className="bank-detail-row">
-                      <span>FSC Code : BARBORERAN</span>
-                      <span>Less USD</span>
-                    </div>
-                    <div className="bank-detail-row">
-                      <span>Less Disc</span>
-                      <span>Round Off</span>
-                    </div>
-                    <div className="bank-detail-row">
-                      <span>Net Payable</span>
-                      <span>*w+gov* [¥2]</span>
+                      <span>Balance Due: ₹{summary.balanceDue.toFixed(2)}</span>
+                      <span>Invoice Date: {new Date(summary.invoiceDate).toLocaleDateString()}</span>
                     </div>
                   </div>
                 </div>
@@ -1096,8 +1214,8 @@ const StartSale = ({ goldRate, silverRate }) => {
                 <hr className="invoice-divider" />
                 
                 <div className="invoice-footer">
-                  <p>Insports vgb</p>
-                  <p>nfb - ft, avg schedule fork (ybbs)</p>
+                  <p>Thank you for your business!</p>
+                  <p>For any queries, please contact us at: {customer.phone || 'N/A'}</p>
                 </div>
               </div>
             </div>

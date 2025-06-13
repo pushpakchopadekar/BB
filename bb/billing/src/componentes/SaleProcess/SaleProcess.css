@@ -1279,3 +1279,40 @@
 .dark-mode .bank-detail-row {
   border-bottom-color: var(--dark-border);
 }
+
+
+
+/* Clear Sale Button */
+.clear-sale-btn {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  padding: 10px 15px;
+  background: var(--danger-gradient);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: var(--transition);
+  box-shadow: var(--shadow-sm);
+  z-index: 10;
+}
+
+.clear-sale-btn:hover {
+  background: var(--danger-600);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+/* Dark mode adjustments for clear button */
+.dark-mode .clear-sale-btn {
+  background: linear-gradient(135deg, var(--danger-600) 0%, var(--danger-700) 100%);
+}
+
+.dark-mode .clear-sale-btn:hover {
+  background: var(--danger-700);
+}

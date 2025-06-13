@@ -13,6 +13,7 @@
   --deep-green: #2E8B57;
   --emerald: #50C878;
   --coral: #FF7F50;
+  --orange: #FFA500;
   --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.12);
   --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
   --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
@@ -345,7 +346,7 @@ body {
 }
 
 .tab.active {
-  color: var(--golden-yellow);
+  color: var(--orange);
 }
 
 .tab.active::after {
@@ -355,7 +356,7 @@ body {
   left: 0;
   width: 100%;
   height: 3px;
-  background: var(--golden-yellow);
+  background: var(--orange);
 }
 
 /* Form Elements */
@@ -376,49 +377,34 @@ body {
 
 .input-container input {
   width: 100%;
-  padding: 12px 0;
-  border: none;
-  border-bottom: 2px solid #d1d5db;
+  padding: 12px 15px;
+  border: 1px solid #d1d5db;
   background: transparent;
   font-size: 15px;
   color: var(--dark-color);
   outline: none;
   transition: var(--transition);
+  border-radius: 5px;
 }
 
 .input-container input:focus {
-  border-bottom-color: var(--golden-yellow);
+  border-color: var(--orange);
 }
 
 .input-container label {
   position: absolute;
-  top: 12px;
-  left: 0;
-  color: #777;
-  font-size: 15px;
+  top: -10px;
+  left: 10px;
+  background: white;
+  padding: 0 5px;
+  color: var(--orange);
+  font-size: 12px;
   pointer-events: none;
   transition: var(--transition);
 }
 
-.input-container input:focus + label,
-.input-container input:not(:placeholder-shown) + label {
-  top: -12px;
-  font-size: 12px;
-  color: var(--golden-yellow);
-}
-
 .underline {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 0;
-  height: 2px;
-  background: var(--golden-yellow);
-  transition: var(--transition);
-}
-
-.input-container input:focus ~ .underline {
-  width: 100%;
+  display: none;
 }
 
 .password-container {
@@ -427,13 +413,13 @@ body {
 
 .toggle-password {
   position: absolute;
-  right: 0;
+  right: 10px;
   top: 50%;
   transform: translateY(-50%);
   background: none;
   border: none;
   cursor: pointer;
-  color: var(--golden-yellow);
+  color: var(--orange);
   padding: 5px;
   transition: var(--transition);
 }
@@ -497,7 +483,7 @@ body {
   background: none;
   border: none;
   cursor: pointer;
-  color: var(--golden-yellow);
+  color: var(--orange);
   padding: 5px;
   border-radius: 50%;
   transition: var(--transition);
@@ -509,7 +495,7 @@ body {
 }
 
 .refresh-captcha:hover {
-  background: rgba(210, 176, 76, 0.1);
+  background: rgba(255, 165, 0, 0.1);
   transform: rotate(180deg);
 }
 
@@ -536,14 +522,14 @@ body {
 
 .remember-me input {
   margin-right: 8px;
-  accent-color: var(--golden-yellow);
+  accent-color: var(--orange);
   cursor: pointer;
 }
 
 .forgot-password {
   background: none;
   border: none;
-  color: var(--golden-yellow);
+  color: var(--orange);
   cursor: pointer;
   text-decoration: none;
   transition: var(--transition);
@@ -555,6 +541,143 @@ body {
   text-decoration: underline;
 }
 
+/* Loading Spinner in Notifications */
+.notification.loading {
+  background-color: rgba(255, 165, 0, 0.1);
+  border-left: 4px solid orange;
+}
+
+.notification.loading .notification-icon {
+  display: none;
+}
+
+.notification.loading .loading-spinner {
+  width: 20px;
+  height: 20px;
+  margin-right: 10px;
+  animation: spin 1s linear infinite;
+}
+
+.notification.loading .loading-spinner svg circle {
+  stroke-dasharray: 150, 200;
+  stroke-dashoffset: -10;
+  stroke-linecap: round;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Submit Button Styles (simplified) */
+.submit-btn {
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.submit-btn:disabled {
+  background-color: #ff8c00;
+  opacity: 0.8;
+  cursor: not-allowed;
+}
+
+.submit-btn:disabled:hover {
+  background-color: #ff8c00;
+}
+
+.submit-btn .submit-arrow {
+  width: 20px;
+  height: 20px;
+  margin-left: 10px;
+  transition: transform 0.3s ease;
+}
+
+.submit-btn:not(:disabled):hover .submit-arrow {
+  transform: translateX(5px);
+}
+
+/* Notification Progress Bar Animation */
+.notification-progress {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 3px;
+  width: 100%;
+  background-color: rgba(255, 255, 255, 0.3);
+  overflow: hidden;
+}
+
+.notification-progress::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 100%;
+  width: 100%;
+  background-color: currentColor;
+  animation: progress 5s linear forwards;
+}
+
+.notification.loading .notification-progress::after {
+  animation: progress 5s linear infinite;
+}
+
+@keyframes progress {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+
+/* Notification Container */
+.notification-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 350px;
+  width: 100%;
+}
+
+.notification {
+  position: relative;
+  padding: 15px 20px;
+  border-radius: 8px;
+  color: white;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  cursor: pointer;
+  transform: translateX(0);
+  transition: transform 0.3s ease, opacity 0.3s ease;
+  opacity: 1;
+}
+
+.notification.success {
+  background-color: rgba(46, 125, 50, 0.9);
+  border-left: 4px solid #2e7d32;
+}
+
+.notification.error {
+  background-color: rgba(211, 47, 47, 0.9);
+  border-left: 4px solid #d32f2f;
+}
+
+.notification-content {
+  display: flex;
+  align-items: center;
+}
+
+.notification-icon {
+  width: 20px;
+  height: 20px;
+  margin-right: 10px;
+  fill: currentColor;
+}
 /* Submit Button */
 .submit-btn {
   display: inline-flex;
@@ -563,7 +686,7 @@ body {
   gap: 10px;
   width: 100%;
   padding: 14px;
-  background: linear-gradient(135deg, var(--golden-yellow) 0%, var(--rich-brown) 100%);
+  background: linear-gradient(135deg, var(--orange) 0%, #ff8c00 100%);
   color: white;
   border: none;
   border-radius: 10px;
@@ -572,7 +695,7 @@ body {
   cursor: pointer;
   transition: var(--transition);
   margin-top: 10px;
-  box-shadow: 0 4px 15px rgba(210, 176, 76, 0.4);
+  box-shadow: 0 4px 15px rgba(255, 165, 0, 0.4);
   position: relative;
   overflow: hidden;
   border: none;
@@ -592,8 +715,8 @@ body {
 }
 
 .submit-btn:hover {
-  background: linear-gradient(135deg, var(--rich-brown) 0%, var(--golden-yellow) 100%);
-  box-shadow: 0 6px 20px rgba(139, 69, 19, 0.4);
+  background: linear-gradient(135deg, #ff8c00 0%, var(--orange) 100%);
+  box-shadow: 0 6px 20px rgba(255, 140, 0, 0.4);
 }
 
 .submit-btn:hover::after {

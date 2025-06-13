@@ -103,6 +103,7 @@ const Login = ({ onLogin }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
+    addNotification('Processing your request...', 'loading');
     
     try {
       if (activeTab === 'register') {
@@ -114,6 +115,8 @@ const Login = ({ onLogin }) => {
       addNotification(error.message || 'An error occurred. Please try again.', 'error');
     } finally {
       setIsLoading(false);
+      // Remove loading notification
+      setNotifications(prev => prev.filter(n => n.type !== 'loading'));
     }
   };
 
@@ -263,6 +266,7 @@ const Login = ({ onLogin }) => {
     }
 
     setIsLoading(true);
+    addNotification('Sending password reset link...', 'loading');
     try {
       await sendPasswordResetEmail(auth, formData.email);
       addNotification(`Password reset link sent to ${formData.email}`, 'success');
@@ -274,6 +278,8 @@ const Login = ({ onLogin }) => {
       addNotification(errorMessage, 'error');
     } finally {
       setIsLoading(false);
+      // Remove loading notification
+      setNotifications(prev => prev.filter(n => n.type !== 'loading'));
     }
   };
 
@@ -292,10 +298,16 @@ const Login = ({ onLogin }) => {
                 <svg className="notification-icon" viewBox="0 0 24 24">
                   <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/>
                 </svg>
-              ) : (
+              ) : notification.type === 'error' ? (
                 <svg className="notification-icon" viewBox="0 0 24 24">
                   <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
                 </svg>
+              ) : (
+                <div className="loading-spinner">
+                  <svg viewBox="0 0 50 50">
+                    <circle cx="25" cy="25" r="20" fill="none" stroke="currentColor" strokeWidth="5"></circle>
+                  </svg>
+                </div>
               )}
               <span>{notification.text}</span>
             </div>
@@ -553,21 +565,11 @@ const Login = ({ onLogin }) => {
           
           <button type="submit" className="submit-btn" disabled={isLoading}>
             <span>
-              {isLoading ? (
-                <span className="loading-spinner">
-                  <svg viewBox="0 0 50 50">
-                    <circle cx="25" cy="25" r="20" fill="none" stroke="currentColor" strokeWidth="5"></circle>
-                  </svg>
-                </span>
-              ) : (
-                activeTab === 'register' ? 'Register' : 'Login'
-              )}
+              {activeTab === 'register' ? 'Register' : 'Login'}
             </span>
-            {!isLoading && (
-              <svg className="submit-arrow" viewBox="0 0 24 24">
-                <path d="M5 12H19M19 12L12 5M19 12L12 19" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            )}
+            <svg className="submit-arrow" viewBox="0 0 24 24">
+              <path d="M5 12H19M19 12L12 5M19 12L12 19" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
           </button>
         </form>
       </div>

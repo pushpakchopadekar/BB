@@ -7,6 +7,7 @@ import SalesHistory from '../SalesHistory/SalesHistory';
 import SalesOverview from '../SalesOverview/SalesOverview';
 import AvailableStock from '../AvailableStock/AvailableStock';
 import StockAlert from '../StockAlert/StockAlert';
+import Invocies from '../Invocies/Invocies';
 import { Bar, Line, Pie } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, PointElement, LineElement, ArcElement } from 'chart.js';
 
@@ -575,15 +576,7 @@ const Dashboard = ({ onLogout }) => {
       case 'Available Stock':
         return <AvailableStock />;
       case 'Invoices':
-        return (
-          <div className="coming-soon">
-            <h2><FileText size={48} /> Invoices Management</h2>
-            <p>Advanced invoice management system coming soon!</p>
-            <div style={{marginTop: '2rem'}}>
-              <div className="loading-shimmer" style={{width: '300px', height: '20px', margin: '0 auto'}}></div>
-            </div>
-          </div>
-        );
+        return <Invocies/>
       case 'Sales Overview':
         return <SalesOverview />;
       case 'Stock Alert':
@@ -729,148 +722,9 @@ const Dashboard = ({ onLogout }) => {
                 <p className="user-role"></p>
               </div>
               
-              <div className="profile-navigation">
-                <button 
-                  className={`profile-nav-btn ${activeProfileSection === 'userInfo' ? 'active' : ''}`}
-                  onClick={() => setActiveProfileSection('userInfo')}
-                >
-                  <User size={16} /> Profile
-                </button>
-                <button 
-                  className={`profile-nav-btn ${activeProfileSection === 'security' ? 'active' : ''}`}
-                  onClick={() => setActiveProfileSection('security')}
-                >
-                  <Lock size={16} /> Security
-                </button>
-                <button 
-                  className={`profile-nav-btn ${activeProfileSection === 'appearance' ? 'active' : ''}`}
-                  onClick={() => setActiveProfileSection('appearance')}
-                >
-                  {darkMode ? <Moon size={16} /> : <Sun size={16} />} Theme
-                </button>
-              </div>
               
-              <div className="profile-content">
-                {activeProfileSection === 'userInfo' && (
-                  <div className="profile-section">
-                    <div className="info-item">
-                      <span>Username:</span>
-                      <span>{userData.username}</span>
-                    </div>
-                    <div className="info-item">
-                      <span>Full Name:</span>
-                      <span>{userData.fullName}</span>
-                    </div>
-                    <div className="info-item">
-                      <span>Email:</span>
-                      <span>{userData.email}</span>
-                    </div>
-                    <div className="info-item">
-                      <span>Phone:</span>
-                      <span>{userData.phone}</span>
-                    </div>
-                    <div className="info-item">
-                      <span>Join Date:</span>
-                      <span>{userData.joinDate}</span>
-                    </div>
-                  </div>
-                )}
-                
-                {activeProfileSection === 'security' && (
-                  <div className="profile-section">
-                    <form onSubmit={handlePasswordChange} className="password-form">
-                      <h3>Change Password</h3>
-                      <div className="form-group">
-                        <label><Lock size={16} /> Current Password</label>
-                        <input 
-                          type="password" 
-                          value={currentPassword}
-                          onChange={(e) => setCurrentPassword(e.target.value)}
-                          placeholder="Enter current password"
-                          className="focusable"
-                        />
-                      </div>
-                      <div className="form-group">
-                        <label><Lock size={16} /> New Password</label>
-                        <input 
-                          type="password" 
-                          value={newPassword}
-                          onChange={(e) => setNewPassword(e.target.value)}
-                          placeholder="Enter new password"
-                          className="focusable"
-                        />
-                      </div>
-                      <div className="form-group">
-                        <label><Lock size={16} /> Confirm Password</label>
-                        <input 
-                          type="password" 
-                          value={confirmPassword}
-                          onChange={(e) => setConfirmPassword(e.target.value)}
-                          placeholder="Confirm new password"
-                          className="focusable"
-                        />
-                      </div>
-                      {passwordError && (
-                        <div className="error-message">
-                          <AlertCircle size={16} /> {passwordError}
-                        </div>
-                      )}
-                      {passwordSuccess && (
-                        <div className="success-message">
-                          <CheckCircle size={16} /> {passwordSuccess}
-                        </div>
-                      )}
-                      <button type="submit" className="change-password-btn" disabled={isLoading}>
-                        {isLoading ? 'Changing...' : 'Change Password'}
-                      </button>
-                    </form>
-                    
-                    <div className="two-factor-auth">
-                      <h3>Two-Factor Authentication</h3>
-                      <div className="toggle-label">
-                        <span>Status:</span>
-                        <button 
-                          className={`toggle-btn ${twoFactorEnabled ? 'enabled' : 'disabled'}`}
-                          onClick={() => setTwoFactorEnabled(!twoFactorEnabled)}
-                        >
-                          {twoFactorEnabled ? '🔒 Enabled' : '🔓 Disabled'}
-                        </button>
-                      </div>
-                      <p className="toggle-description">
-                        Adds an extra layer of security to your account by requiring a verification code when logging in.
-                      </p>
-                    </div>
-                  </div>
-                )}
-                
-                {activeProfileSection === 'appearance' && (
-                  <div className="profile-section">
-                    <h3>Theme Preferences</h3>
-                    <div className="theme-options">
-                      <div 
-                        className={`theme-option ${!darkMode ? 'active' : ''}`}
-                        onClick={() => setDarkMode(false)}
-                      >
-                        <div className="theme-preview light-theme">
-                          <div className="theme-header"></div>
-                          <div className="theme-content"></div>
-                        </div>
-                        <span><Sun size={16} /> Light Mode</span>
-                      </div>
-                      <div 
-                        className={`theme-option ${darkMode ? 'active' : ''}`}
-                        onClick={() => setDarkMode(true)}
-                      >
-                        <div className="theme-preview dark-theme">
-                          <div className="theme-header"></div>
-                          <div className="theme-content"></div>
-                        </div>
-                        <span><Moon size={16} /> Dark Mode</span>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
+             
+               
               
               <div className="profile-actions">
                 <button className="logout-btn hover-lift" onClick={handleLogoutClick}>
